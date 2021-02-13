@@ -1,0 +1,8 @@
+domain: upnp-port-forward.mzg.io
+layout: go.kubebuilder.io/v3
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}
+projectName: upnp-port-forward-operator
+repo: github.com/MOZGIII/upnp-port-forward-operator
+version: "3"
