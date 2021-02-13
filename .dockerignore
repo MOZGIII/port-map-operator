@@ -3,4 +3,4 @@
 !go.sum
 !vendor
 !pkg
-!main.go
+!cmd
