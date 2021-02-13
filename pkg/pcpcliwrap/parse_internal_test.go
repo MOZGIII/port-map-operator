@@ -219,6 +219,28 @@ var _ = Describe("parseLine", func() {
 		})
 	})
 
+	Context("with a slerr line (short lifetime error)", func() {
+		BeforeEach(func() {
+			sampleLine = `::ffff:192.168.0.1   TCP  ::ffff:192.168.0.2   32101   ::                       0   ::                      80   8 slerr  -`
+		})
+
+		It("should produce an expected error", func() {
+			Expect(err).To(BeIdenticalTo(ErrFailResponse))
+			Expect(res).To(BeNil())
+		})
+	})
+
+	Context("with a fail line (2)", func() {
+		BeforeEach(func() {
+			sampleLine = `::ffff:192.168.0.1   TCP  ::ffff:192.168.0.2   32101   ::                       0   ::                      80   2  fail  -`
+		})
+
+		It("should produce an expected error", func() {
+			Expect(err).To(BeIdenticalTo(ErrFailResponse))
+			Expect(res).To(BeNil())
+		})
+	})
+
 	Context("with empty line", func() {
 		BeforeEach(func() {
 			sampleLine = ``
