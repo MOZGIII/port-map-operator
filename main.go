@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	"github.com/MOZGIII/port-map-operator/controllers"
+	"github.com/MOZGIII/port-map-operator/pkg/controllers"
 	//+kubebuilder:scaffold:imports
 )
 
