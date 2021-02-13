@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	"github.com/MOZGIII/upnp-port-forward-operator/controllers"
+	"github.com/MOZGIII/port-map-operator/controllers"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -69,7 +69,7 @@ func main() {
 		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "71c9600b.upnp-port-forward.mzg.io",
+		LeaderElectionID:       "71c9600b.port-map.mzg.io",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

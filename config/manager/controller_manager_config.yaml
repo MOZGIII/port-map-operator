@@ -8,4 +8,4 @@ webhook:
   port: 9443
 leaderElection:
   leaderElect: true
-  resourceName: 71c9600b.upnp-port-forward.mzg.io
+  resourceName: 71c9600b.port-map.mzg.io

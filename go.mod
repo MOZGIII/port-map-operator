@@ -1,4 +1,4 @@
-module github.com/MOZGIII/upnp-port-forward-operator
+module github.com/MOZGIII/port-map-operator
 
 go 1.15
 
