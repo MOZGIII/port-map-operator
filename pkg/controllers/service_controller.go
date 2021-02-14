@@ -132,6 +132,8 @@ func makePortmapRequests(log logr.Logger, service *corev1.Service, ann *annotati
 }
 
 func (r *ServiceReconciler) mapPorts(ctx context.Context, log logr.Logger, pmreqlist []*portmap.Request) ([]*portmap.Response, []error) {
+	log.V(1).Info("mapping ports", "requests", pmreqlist)
+
 	var (
 		pmreslist []*portmap.Response
 		pmerrlist []error
