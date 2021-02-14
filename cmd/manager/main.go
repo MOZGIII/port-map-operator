@@ -80,6 +80,15 @@ func main() {
 	pm := pcpcliwrap.New(&pcpcliwrap.Command{
 		CommandName: "/usr/local/bin/pcp",
 	})
+	stopch := make(chan struct{})
+	donech := make(chan struct{})
+	go func() {
+		err := pm.Run(stopch)
+		if err != nil {
+			setupLog.Error(err, "port mapper failed")
+		}
+		close(donech)
+	}()
 
 	if err = (&controllers.ServiceReconciler{
 		Client: mgr.GetClient(),
@@ -108,4 +117,6 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+	close(stopch)
+	<-donech
 }
