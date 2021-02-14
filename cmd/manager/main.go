@@ -32,6 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/MOZGIII/port-map-operator/pkg/controllers"
+	"github.com/MOZGIII/port-map-operator/pkg/pcpcliwrap"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -76,10 +77,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	pm := pcpcliwrap.New(&pcpcliwrap.Command{
+		CommandName: "/usr/local/bin/pcp",
+	})
+
 	if err = (&controllers.ServiceReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("Service"),
 		Scheme: mgr.GetScheme(),
+
+		PortMap:         pm,
+		DefaultLifetime: 120,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Service")
 		os.Exit(1)
