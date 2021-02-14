@@ -78,7 +78,7 @@ func main() {
 	}
 
 	pm := pcpcliwrap.New(&pcpcliwrap.Command{
-		CommandName: "/usr/local/bin/pcp",
+		CommandName: "pcp",
 	})
 	stopch := make(chan struct{})
 	donech := make(chan struct{})
