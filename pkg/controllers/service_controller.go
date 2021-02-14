@@ -18,7 +18,10 @@ package controllers
 
 import (
 	"context"
+	"time"
 
+	"github.com/MOZGIII/port-map-operator/pkg/annotations"
+	"github.com/MOZGIII/port-map-operator/pkg/portmap"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -31,6 +34,9 @@ type ServiceReconciler struct {
 	client.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme
+
+	PortMap         portmap.Mapper
+	DefaultLifetime portmap.Lifetime
 }
 
 //+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
@@ -39,19 +45,55 @@ type ServiceReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the Service object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.0/pkg/reconcile
 func (r *ServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = r.Log.WithValues("service", req.NamespacedName)
+	log := r.Log.WithValues("service", req.NamespacedName)
 
-	// your logic here
+	var service corev1.Service
+	if err := r.Get(ctx, req.NamespacedName, &service); err != nil {
+		log.Error(err, "unable to fetch Service, skipping")
+		// We'll ignore not-found errors, since they can't be fixed by
+		// an immediate requeue (we'll need to wait for a new notification),
+		// and we can get them on deleted requests.
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
 
-	return ctrl.Result{}, nil
+	if service.Spec.Type != corev1.ServiceTypeLoadBalancer {
+		log.V(1).Info("service type is not LoadBalancer, skipping")
+		return ctrl.Result{}, nil
+	}
+
+	ann, err := annotations.FromService(&service)
+	if err != nil {
+		log.V(1).Info("no annotations found, skipping")
+		return ctrl.Result{}, nil
+	}
+
+	pmreqlist, err := makePortmapRequests(log, &service, ann, r.DefaultLifetime)
+	if err != nil {
+		log.V(1).Info("unable to produce portmap request, skipping")
+		return ctrl.Result{}, nil
+	}
+
+	pmreslist, pmerrlist := r.mapPorts(ctx, log, pmreqlist)
+	log.Info("port mapping procedute finished", "errors", pmerrlist, "responses", pmreslist)
+
+	err = r.updateStatus(ctx, &service, pmreslist, pmerrlist)
+	if err != nil {
+		log.Error(err, "unable to update the Service status")
+	} else {
+		log.V(2).Info("status updated successfully")
+	}
+
+	requeueAfter := r.DefaultLifetime - 2
+	const twelveHoursInSecs = 12 * 60
+	if requeueAfter > twelveHoursInSecs {
+		requeueAfter = twelveHoursInSecs
+	}
+
+	return ctrl.Result{
+		// Force reqeue this service to renew the port map lifetime.
+		RequeueAfter: time.Second * time.Duration(requeueAfter),
+	}, client.IgnoreNotFound(err)
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -59,4 +101,67 @@ func (r *ServiceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Service{}).
 		Complete(r)
+}
+
+func makePortmapRequests(log logr.Logger, service *corev1.Service, ann *annotations.Annotations, defaultLifetime portmap.Lifetime) ([]*portmap.Request, error) {
+	pmreqlist := make([]*portmap.Request, 0, len(service.Spec.Ports))
+
+	for _, servicePort := range service.Spec.Ports {
+		var protocol portmap.Protocol
+		switch servicePort.Protocol {
+		case corev1.ProtocolTCP:
+			protocol = portmap.ProtocolTCP
+		case corev1.ProtocolUDP:
+			protocol = portmap.ProtocolUDP
+		case corev1.ProtocolSCTP:
+			protocol = portmap.ProtocolSCTP
+		default:
+			log.Info("unexpected protocol", "protocol", servicePort.Protocol)
+		}
+
+		pmreq := &portmap.Request{
+			Protocol:    protocol,
+			NodePort:    portmap.Port(servicePort.NodePort),
+			GatewayPort: portmap.Port(servicePort.Port),
+			Lifetime:    defaultLifetime,
+		}
+		pmreqlist = append(pmreqlist, pmreq)
+	}
+
+	return pmreqlist, nil
+}
+
+func (r *ServiceReconciler) mapPorts(ctx context.Context, log logr.Logger, pmreqlist []*portmap.Request) ([]*portmap.Response, []error) {
+	var (
+		pmreslist []*portmap.Response
+		pmerrlist []error
+	)
+	for _, pmreq := range pmreqlist {
+		pmres, err := r.PortMap.Map(ctx, pmreq)
+		if err != nil {
+			log.Error(err, "unable to map the port", "request", pmreq)
+			pmerrlist = append(pmerrlist, err)
+			continue
+		}
+		pmreslist = append(pmreslist, pmres)
+	}
+	return pmreslist, pmerrlist
+}
+
+func (r *ServiceReconciler) updateStatus(ctx context.Context, service *corev1.Service, pmreslist []*portmap.Response, pmerrlist []error) error {
+	serviceCopy := service.DeepCopy()
+
+	extenralIPs := make([]string, 0, len(pmreslist))
+
+	for _, pmres := range pmreslist {
+		ip := pmres.GatewayIP.String()
+		extenralIPs = append(extenralIPs, ip)
+	}
+
+	serviceCopy.Spec.ExternalIPs = extenralIPs
+
+	// TODO: set load balancer ingresses
+	// TODO: set proper conditions
+
+	return r.Update(ctx, serviceCopy)
 }
