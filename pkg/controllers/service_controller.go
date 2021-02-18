@@ -155,8 +155,14 @@ func (r *ServiceReconciler) updateStatus(ctx context.Context, service *corev1.Se
 
 	extenralIPs := make([]string, 0, len(pmreslist))
 
+OuterLoop:
 	for _, pmres := range pmreslist {
 		ip := pmres.GatewayIP.String()
+		for _, existingIP := range extenralIPs {
+			if ip == existingIP {
+				continue OuterLoop
+			}
+		}
 		extenralIPs = append(extenralIPs, ip)
 	}
 
