@@ -17,8 +17,10 @@ limitations under the License.
 package controllers
 
 import (
+	"math/rand"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/MOZGIII/port-map-operator/pkg/pmmock"
 	. "github.com/onsi/ginkgo"
@@ -40,7 +42,7 @@ var k8sClient client.Client
 var k8sManager ctrl.Manager
 var testEnv *envtest.Environment
 var portMapper *pmmock.MockMapper
-var pmockctl *pmmock.Control
+var pmmockctl *pmmock.Control
 
 const defaultLifetime = 120
 
@@ -71,7 +73,7 @@ var _ = BeforeSuite(func(done Done) {
 
 	//+kubebuilder:scaffold:scheme
 
-	portMapper, pmockctl = pmmock.New()
+	portMapper, pmmockctl = pmmock.New()
 
 	k8sManager, err = ctrl.NewManager(cfg, ctrl.Options{Scheme: scheme.Scheme})
 	Expect(err).ToNot(HaveOccurred())
@@ -103,3 +105,17 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+var letterRunes = []rune("abcdefghijklmnopqrstuvwxyz1234567890")
+
+func randStringRunes(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+	return string(b)
+}
