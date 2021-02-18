@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/MOZGIII/port-map-operator/pkg/annotations"
@@ -139,15 +140,72 @@ func (r *ServiceReconciler) mapPorts(ctx context.Context, log logr.Logger, pmreq
 		pmerrlist []error
 	)
 	for _, pmreq := range pmreqlist {
-		pmres, err := r.PortMap.Map(ctx, pmreq)
+		pmres, err := r.mapPort(ctx, log, pmreq)
 		if err != nil {
-			log.Error(err, "unable to map the port", "request", pmreq)
 			pmerrlist = append(pmerrlist, err)
 			continue
 		}
 		pmreslist = append(pmreslist, pmres)
 	}
 	return pmreslist, pmerrlist
+}
+
+type ErrMappedGatewayPortMismatch struct {
+	RequestedGatewayPort portmap.Port
+	MappedGatewayPort    portmap.Port
+}
+
+var _ error = (*ErrMappedGatewayPortMismatch)(nil)
+
+func (e *ErrMappedGatewayPortMismatch) Error() string {
+	return fmt.Sprintf(
+		"mapped gateway port (%d) is different from the requested port (%d)",
+		e.MappedGatewayPort, e.RequestedGatewayPort,
+	)
+}
+
+func (r *ServiceReconciler) mapPort(ctx context.Context, log logr.Logger, pmreq *portmap.Request) (*portmap.Response, error) {
+	log.V(1).Info("mapping port", "request", pmreq)
+
+	pmres, err := r.PortMap.Map(ctx, pmreq)
+	if err != nil {
+		log.Error(err, "unable to map the port", "request", pmreq)
+		return nil, err
+	}
+
+	if err := checkRequestResponseCoherence(pmreq, pmres); err != nil {
+		log.Error(err, "the response was not coherent to the request", "request", pmreq, "response", pmres)
+
+		cancelreq := &portmap.Request{
+			Protocol:    pmres.Protocol,
+			NodePort:    pmres.NodePort,
+			GatewayPort: pmres.GatewayPort,
+			Lifetime:    portmap.LifetimeDelete,
+		}
+		cancelres, cancelerr := r.PortMap.Map(ctx, cancelreq)
+		if cancelerr != nil {
+			log.Error(
+				cancelerr,
+				"failed to cancel incoherent port map",
+				"request", pmreq, "response", pmres,
+				"cancelreq", cancelreq, "cancelres", cancelres,
+			)
+		}
+
+		return nil, err
+	}
+
+	return pmres, nil
+}
+
+func checkRequestResponseCoherence(pmreq *portmap.Request, pmres *portmap.Response) error {
+	if pmres.GatewayPort != pmreq.GatewayPort {
+		return &ErrMappedGatewayPortMismatch{
+			RequestedGatewayPort: pmreq.GatewayPort,
+			MappedGatewayPort:    pmres.GatewayPort,
+		}
+	}
+	return nil
 }
 
 func (r *ServiceReconciler) updateStatus(ctx context.Context, service *corev1.Service, pmreslist []*portmap.Response, pmerrlist []error) error {
