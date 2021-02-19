@@ -39,7 +39,6 @@ func (ctl *Control) Auto() chan<- struct{} {
 			case <-stopch:
 				return
 			case ctlreq := <-ctl.RequestCh:
-				// req := ctlreq.Request
 				res := &portmap.Response{
 					Protocol:    ctlreq.Request.Protocol,
 					NodePort:    ctlreq.Request.NodePort,
@@ -55,4 +54,13 @@ func (ctl *Control) Auto() chan<- struct{} {
 		}
 	}()
 	return stopch
+}
+
+func (ctl *Control) ExpectNothing(timeout time.Duration) {
+	select {
+	case <-ctl.RequestCh:
+		panic("a request arrived while we were expecing nothing to arrive")
+	case <-time.After(timeout):
+		// fine, noop
+	}
 }

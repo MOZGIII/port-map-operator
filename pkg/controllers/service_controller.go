@@ -65,7 +65,7 @@ func (r *ServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	ann, err := annotations.FromService(&service)
 	if err != nil {
-		log.V(1).Info("no annotations found, skipping")
+		log.Error(err, "Service annotations parsing error, skipping...")
 		return ctrl.Result{}, nil
 	}
 
@@ -108,6 +108,11 @@ func makePortmapRequests(log logr.Logger, service *corev1.Service, ann *annotati
 	pmreqlist := make([]*portmap.Request, 0, len(service.Spec.Ports))
 
 	for _, servicePort := range service.Spec.Ports {
+		override, hasOverride := ann.Overrides[annotations.PortDescriptor{Port: servicePort.Port, Protocol: servicePort.Protocol}]
+		if hasOverride && override.Skip {
+			continue
+		}
+
 		var protocol portmap.Protocol
 		switch servicePort.Protocol {
 		case corev1.ProtocolTCP:
@@ -120,10 +125,16 @@ func makePortmapRequests(log logr.Logger, service *corev1.Service, ann *annotati
 			log.Info("unexpected protocol", "protocol", servicePort.Protocol)
 		}
 
+		gatewayPort := servicePort.Port
+
+		if hasOverride && override.Port > 0 {
+			gatewayPort = override.Port
+		}
+
 		pmreq := &portmap.Request{
 			Protocol:    protocol,
 			NodePort:    portmap.Port(servicePort.NodePort),
-			GatewayPort: portmap.Port(servicePort.Port),
+			GatewayPort: portmap.Port(gatewayPort),
 			Lifetime:    defaultLifetime,
 		}
 		pmreqlist = append(pmreqlist, pmreq)
