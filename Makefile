@@ -81,10 +81,10 @@ test: manifests generate fmt vet ## Run tests.
 ##@ Build
 
 build: generate fmt vet ## Build manager binary.
-	go build -o bin/manager main.go
+	go build -mod=vendor -o bin/manager ./cmd/manager
 
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./main.go
+	go run -mod=vendor ./cmd/manager
 
 docker-build: test ## Build docker image with the manager.
 	docker build -t ${IMG} .
