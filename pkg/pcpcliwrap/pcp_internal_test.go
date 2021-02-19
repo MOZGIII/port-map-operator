@@ -2,6 +2,7 @@ package pcpcliwrap
 
 import (
 	"context"
+	"errors"
 	"net"
 	"os/exec"
 
@@ -67,10 +68,13 @@ var _ = Describe("PCP", func() {
 		})
 
 		It("should produce an expected error", func() {
-			Expect(err).To(BeAssignableToTypeOf(&exec.ExitError{}))
+			Expect(err).To(MatchError("PCP CLI failed: exit status 1: Important message\n"))
 			Expect(res).To(BeNil())
 
-			exitErr, _ := err.(*exec.ExitError)
+			exitErr := &exec.ExitError{}
+			isExitErr := errors.As(err, &exitErr)
+			Expect(isExitErr).To(BeTrue())
+
 			Expect(exitErr.ProcessState.ExitCode()).To(BeIdenticalTo(1))
 			Expect(exitErr.Stderr).To(Equal([]byte("Important message\n")))
 		})

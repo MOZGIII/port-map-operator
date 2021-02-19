@@ -3,6 +3,8 @@ package pcpcliwrap
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os/exec"
 
 	"github.com/MOZGIII/port-map-operator/pkg/portmap"
 )
@@ -50,7 +52,15 @@ func (p *PCP) Run(stopch <-chan struct{}) error {
 				// closed.
 				continue
 			}
-			req.ResponseCh <- &opRes{Response: res, Error: err}
+			if err != nil {
+				if eerr, ok := err.(*exec.ExitError); ok {
+					req.ResponseCh <- &opRes{Error: fmt.Errorf("PCP CLI failed: %w: %s", eerr, string(eerr.Stderr))}
+				} else {
+					req.ResponseCh <- &opRes{Error: fmt.Errorf("internal PCP error: %w", err)}
+				}
+				continue
+			}
+			req.ResponseCh <- &opRes{Response: res}
 		}
 	}
 }
