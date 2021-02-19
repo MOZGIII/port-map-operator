@@ -72,6 +72,7 @@ var _ = Describe("PCP", func() {
 
 			exitErr, _ := err.(*exec.ExitError)
 			Expect(exitErr.ProcessState.ExitCode()).To(BeIdenticalTo(1))
+			Expect(exitErr.Stderr).To(Equal([]byte("Important message\n")))
 		})
 	})
 })
