@@ -24,13 +24,14 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+      hostNetwork: true
       containers:
-      - command:
-        - /manager
+      - name: manager
+        image: mozgiii/port-map-operator:latest
+        command:
+        - manager
         args:
-        - --leader-elect
-        image: controller:latest
-        name: manager
+        - --config=/controller_manager_config.yaml
         securityContext:
           allowPrivilegeEscalation: false
         livenessProbe:
@@ -52,4 +53,12 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
+        volumeMounts:
+          - name: config
+            mountPath: /controller_manager_config.yaml
+            subPath: controller_manager_config.yaml
       terminationGracePeriodSeconds: 10
+      volumes:
+        - name: config
+          configMap:
+            name: manager-config
