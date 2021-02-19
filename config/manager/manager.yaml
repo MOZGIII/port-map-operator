@@ -27,11 +27,11 @@ spec:
       hostNetwork: true
       containers:
       - name: manager
-        image: mozgiii/port-map-operator:latest
+        image: mozgiii/port-map-operator:master
         command:
         - manager
         args:
-        - --config=/controller_manager_config.yaml
+        - --leader-elect
         securityContext:
           allowPrivilegeEscalation: false
         livenessProbe:
@@ -53,12 +53,4 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
-        volumeMounts:
-          - name: config
-            mountPath: /controller_manager_config.yaml
-            subPath: controller_manager_config.yaml
       terminationGracePeriodSeconds: 10
-      volumes:
-        - name: config
-          configMap:
-            name: manager-config
