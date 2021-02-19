@@ -14,6 +14,7 @@ type Command struct {
 
 func (c *Command) Exec(ctx context.Context, req *portmap.Request) (*portmap.Response, error) {
 	cmd := c.prepareCommand(ctx, req)
+	cmd.Stderr = nil
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, err
