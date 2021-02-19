@@ -22,12 +22,11 @@ func (c *Command) Exec(ctx context.Context, req *portmap.Request) (*portmap.Resp
 }
 
 func (c *Command) prepareCommand(ctx context.Context, req *portmap.Request) *exec.Cmd {
-	var args []string
-
-	args = append(args, "--protocol", fmt.Sprintf("%d", req.Protocol))
-	args = append(args, "--internal", fmt.Sprintf(":%d", req.NodePort))
-	args = append(args, "--external", fmt.Sprintf(":%d", req.GatewayPort))
-	args = append(args, "--lifetime", fmt.Sprintf("%d", req.Lifetime))
-
-	return exec.CommandContext(ctx, c.CommandName, args...)
+	// nolint: gosec
+	return exec.CommandContext(ctx, c.CommandName,
+		"--protocol", fmt.Sprintf("%d", req.Protocol),
+		"--internal", fmt.Sprintf(":%d", req.NodePort),
+		"--external", fmt.Sprintf(":%d", req.GatewayPort),
+		"--lifetime", fmt.Sprintf("%d", req.Lifetime),
+	)
 }

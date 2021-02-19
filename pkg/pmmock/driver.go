@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/MOZGIII/port-map-operator/pkg/portmap"
+
+	// nolint: golint,stylecheck
 	. "github.com/onsi/gomega"
 )
 

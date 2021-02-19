@@ -42,15 +42,15 @@ func (p *PCP) Run(stopch <-chan struct{}) error {
 		case <-stopch:
 			close(p.control)
 			return nil
-		case opReq := <-p.control:
-			res, err := p.cmd.Exec(opReq.Context, opReq.Request)
-			if opReq.Context.Err() != nil {
+		case req := <-p.control:
+			res, err := p.cmd.Exec(req.Context, req.Request)
+			if req.Context.Err() != nil {
 				// Context has expired, this means we are no longer interested
 				// in the response, and the response channel should've been
 				// closed.
 				continue
 			}
-			opReq.ResponseCh <- &opRes{Response: res, Error: err}
+			req.ResponseCh <- &opRes{Response: res, Error: err}
 		}
 	}
 }

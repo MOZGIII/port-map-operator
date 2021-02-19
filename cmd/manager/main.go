@@ -67,7 +67,7 @@ func main() {
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
-		Port:                   9443,
+		Port:                   9443, // nolint: gomnd
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "71c9600b.port-map.mzg.io",
@@ -83,9 +83,9 @@ func main() {
 	stopch := make(chan struct{})
 	donech := make(chan struct{})
 	go func() {
-		err := pm.Run(stopch)
-		if err != nil {
-			setupLog.Error(err, "port mapper failed")
+		mperr := pm.Run(stopch)
+		if mperr != nil {
+			setupLog.Error(mperr, "port mapper failed")
 		}
 		close(donech)
 	}()
@@ -96,7 +96,7 @@ func main() {
 		Scheme: mgr.GetScheme(),
 
 		PortMap:         pm,
-		DefaultLifetime: 120,
+		DefaultLifetime: 120, // nolint: gomnd
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Service")
 		os.Exit(1)

@@ -30,7 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ServiceReconciler reconciles a Service object
+// ServiceReconciler reconciles a Service object.
 type ServiceReconciler struct {
 	client.Client
 	Log    logr.Logger
@@ -69,12 +69,7 @@ func (r *ServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
-	pmreqlist, err := makePortmapRequests(log, &service, ann, r.DefaultLifetime)
-	if err != nil {
-		log.V(1).Info("unable to produce portmap request, skipping")
-		return ctrl.Result{}, nil
-	}
-
+	pmreqlist := makePortmapRequests(log, &service, ann, r.DefaultLifetime)
 	pmreslist, pmerrlist := r.mapPorts(ctx, log, pmreqlist)
 	log.Info("port mapping procedute finished", "errors", pmerrlist, "responses", pmreslist)
 
@@ -82,10 +77,10 @@ func (r *ServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if err != nil {
 		log.Error(err, "unable to update the Service status")
 	} else {
-		log.V(2).Info("status updated successfully")
+		log.V(1).Info("status updated successfully")
 	}
 
-	requeueAfter := r.DefaultLifetime - 2
+	requeueAfter := r.DefaultLifetime - 2 // nolint: gomnd
 	const twelveHoursInSecs = 12 * 60
 	if requeueAfter > twelveHoursInSecs {
 		requeueAfter = twelveHoursInSecs
@@ -104,7 +99,12 @@ func (r *ServiceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func makePortmapRequests(log logr.Logger, service *corev1.Service, ann *annotations.Annotations, defaultLifetime portmap.Lifetime) ([]*portmap.Request, error) {
+func makePortmapRequests(
+	log logr.Logger,
+	service *corev1.Service,
+	ann *annotations.Annotations,
+	defaultLifetime portmap.Lifetime,
+) []*portmap.Request {
 	pmreqlist := make([]*portmap.Request, 0, len(service.Spec.Ports))
 
 	for _, servicePort := range service.Spec.Ports {
@@ -140,16 +140,15 @@ func makePortmapRequests(log logr.Logger, service *corev1.Service, ann *annotati
 		pmreqlist = append(pmreqlist, pmreq)
 	}
 
-	return pmreqlist, nil
+	return pmreqlist
 }
 
 func (r *ServiceReconciler) mapPorts(ctx context.Context, log logr.Logger, pmreqlist []*portmap.Request) ([]*portmap.Response, []error) {
 	log.V(1).Info("mapping ports", "requests", pmreqlist)
 
-	var (
-		pmreslist []*portmap.Response
-		pmerrlist []error
-	)
+	pmreslist := make([]*portmap.Response, 0, len(pmreqlist))
+	pmerrlist := make([]error, 0)
+
 	for _, pmreq := range pmreqlist {
 		pmres, err := r.mapPort(ctx, log, pmreq)
 		if err != nil {
@@ -219,7 +218,12 @@ func checkRequestResponseCoherence(pmreq *portmap.Request, pmres *portmap.Respon
 	return nil
 }
 
-func (r *ServiceReconciler) updateStatus(ctx context.Context, service *corev1.Service, pmreslist []*portmap.Response, pmerrlist []error) error {
+func (r *ServiceReconciler) updateStatus(
+	ctx context.Context,
+	service *corev1.Service,
+	pmreslist []*portmap.Response,
+	pmerrlist []error, // nolint: unparam // TODO
+) error {
 	serviceCopy := service.DeepCopy()
 
 	extenralIPs := make([]string, 0, len(pmreslist))

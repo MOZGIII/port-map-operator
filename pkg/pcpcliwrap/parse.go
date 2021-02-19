@@ -21,7 +21,7 @@ var (
 	ErrNotDone      = errors.New("port map did't complete in time")
 )
 
-// Used for mocks
+// Used for mocks.
 var timeNow = time.Now
 
 type phase uint
@@ -51,7 +51,7 @@ func parseOutput(output []byte) (*portmap.Response, error) {
 			phase = parsingLines
 		case parsingLines:
 			text := scanner.Text()
-			if len(text) == 0 {
+			if text == "" {
 				phase = parsingComplete
 				continue
 			}
@@ -76,6 +76,7 @@ func parseOutput(output []byte) (*portmap.Response, error) {
 }
 
 func parseLine(line string) (*portmap.Response, error) {
+	// nolint: lll
 	// ::ffff:192.168.0.1   TCP  ::ffff:192.168.0.2  32100   ::                       0   ::ffff:1.2.3.4 32100   0  succ Sat Feb 13 19:41:56 2021
 
 	var serverIP, prot string
@@ -106,8 +107,8 @@ func parseLine(line string) (*portmap.Response, error) {
 	)
 	delayParseErr := false
 	if err != nil {
-		const FIRST_LIFETIME_PATTERN_NUM = 10
-		delayParseErr = err == io.EOF && parsedNum >= FIRST_LIFETIME_PATTERN_NUM && lifetimeEndList[0] == "-"
+		const firstLifetimePatternNum = 10
+		delayParseErr = err == io.EOF && parsedNum >= firstLifetimePatternNum && lifetimeEndList[0] == "-"
 		if !delayParseErr {
 			return nil, err
 		}

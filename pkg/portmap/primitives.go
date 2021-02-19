@@ -6,10 +6,10 @@ package portmap
 type Protocol uint8
 
 const (
-	ProtocolAny  = Protocol(0)
-	ProtocolTCP  = Protocol(6)
-	ProtocolUDP  = Protocol(17)
-	ProtocolSCTP = Protocol(132)
+	ProtocolAny  Protocol = 0
+	ProtocolTCP  Protocol = 6
+	ProtocolUDP  Protocol = 17
+	ProtocolSCTP Protocol = 132
 )
 
 // Port number (for protocols that have ports).
