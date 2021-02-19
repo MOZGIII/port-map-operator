@@ -29,8 +29,14 @@ if [[ "$*" != "${EXPECTED_ARGV[*]}" ]]; then
   exit 111
 fi
 
+# Portable date invocation (GNU/BSD versions).
 # In the format like `Sat Feb 13 22:23:42 2021`
-LEASE_DATE_END="$(LANG=C date +'%c')" # TODO: adjust the time forward by 120 secs
+# shellcheck disable=SC2251
+! LEASE_DATE_END="$(LANG=C date -d 'in 120 seconds' +'%c' 2>/dev/null)"
+BSD_DATE_EXITCODE="$?"
+if [[ "$BSD_DATE_EXITCODE" -eq 0 ]]; then
+  LEASE_DATE_END="$(LANG=C date -v+120S +'%c' 2>/dev/null)"
+fi
 
 pe ""
 pe "  0s 000ms 000us INFO   : Found gateway ::ffff:192.168.0.1. Added as possible PCP server."
