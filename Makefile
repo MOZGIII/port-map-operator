@@ -75,6 +75,9 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
+lint: ## Run golangci-lint against code.
+	go run -mod=vendor github.com/golangci/golangci-lint/cmd/golangci-lint run
+
 test: manifests generate fmt vet ## Run tests.
 	hack/intestenv.sh go run github.com/onsi/ginkgo/ginkgo -v ./... -coverprofile cover.out
 
