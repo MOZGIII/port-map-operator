@@ -23,6 +23,5 @@ FROM debian:buster
 WORKDIR /
 COPY --from=builder /workspace/manager /usr/local/bin/manager
 COPY --from=pcp-builder /workspace/build/bin/pcp /usr/local/bin/pcp
-USER 65532:65532
 
 CMD ["/usr/local/bin/manager"]
