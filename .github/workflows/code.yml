@@ -12,8 +12,19 @@ defaults:
 
 jobs:
 
-  build:
+  test:
+    name: ${{ matrix.job.name }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - name: Build
+            command: make build
+          - name: Test
+            command: make test
+          - name: Lint
+            command: make lint
     steps:
     - uses: actions/checkout@v2
 
@@ -22,11 +33,4 @@ jobs:
       with:
         go-version: 1.15
 
-    - name: Build
-      run: make build
-
-    - name: Test
-      run: make test
-
-    - name: Lint
-      run: make lint
+    - run: ${{ matrix.job.command }}
