@@ -30,3 +30,17 @@ manually. Typical value would be the address of your router with port `5351`
 (standard PCP server port), or `5350`.
 To configure the address, add the argument in the form of
 `--pcp-server=192.168.1.1:5351` to the container command.
+
+## Usage
+
+After the operator is installed, just create a `Service` with
+`type: LoadBalancer`, and the operator will map the port and fill in the
+`externalIP`.
+
+This is how it should look like:
+
+```shell
+$ kubectl get svc
+NAME         TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)          AGE
+podinfo      LoadBalancer   10.98.1.2      1.2.3.4         1234:31234/TCP   1h
+```
