@@ -17,13 +17,13 @@ spec:
     matchLabels:
       control-plane: controller-manager
   replicas: 1
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
         control-plane: controller-manager
     spec:
-      securityContext:
-        runAsNonRoot: true
       hostNetwork: true
       containers:
       - name: manager
@@ -32,8 +32,6 @@ spec:
         - manager
         args:
         - --leader-elect
-        securityContext:
-          allowPrivilegeEscalation: false
         livenessProbe:
           httpGet:
             path: /healthz
