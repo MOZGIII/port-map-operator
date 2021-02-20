@@ -44,3 +44,10 @@ $ kubectl get svc
 NAME         TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)          AGE
 podinfo      LoadBalancer   10.98.1.2      1.2.3.4         1234:31234/TCP   1h
 ```
+
+The port map should also be visible in your router UI, for instance at
+the OpenWRT it can be found at the UPnP page.
+
+If everything works, you (or anyone in the internet) should be able to reach
+the service via the IP and the port of the service.
+In the example above - the service will be available at `1.2.3.4:1234`.
