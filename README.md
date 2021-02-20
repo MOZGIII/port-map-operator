@@ -26,7 +26,7 @@ image to a non-rolling docker tag (using rolling tags like `latest`, `nightly`
 or `master` is not recommended).
 
 If you have issues with PCP server autodiscovery, you can specify the address
-manually. Typical value would be the address of your router with port `5351`
+manually. A typical value would be the address of your router with port `5351`
 (standard PCP server port), or `5350`.
 To configure the address, add the argument in the form of
 `--pcp-server=192.168.1.1:5351` to the container command.
@@ -46,9 +46,9 @@ podinfo      LoadBalancer   10.98.1.2      1.2.3.4         1234:31234/TCP   1h
 ```
 
 The port map should also be visible in your router UI, for instance at
-the OpenWRT it can be found at the UPnP page.
+the OpenWRT it can be found on the UPnP page.
 
-If everything works, you (or anyone in the internet) should be able to reach
+If everything works, you (or anyone on the internet) should be able to reach
 the service via the IP and the port of the service.
 In the example above - the service will be available at `1.2.3.4:1234`.
 
