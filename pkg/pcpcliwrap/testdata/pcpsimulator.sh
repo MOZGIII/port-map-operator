@@ -20,6 +20,7 @@ EXPECTED_ARGV=(
   --internal :32100
   --external :80
   --lifetime 120
+  --server 127.0.0.1:5351
 )
 
 if [[ "$*" != "${EXPECTED_ARGV[*]}" ]]; then

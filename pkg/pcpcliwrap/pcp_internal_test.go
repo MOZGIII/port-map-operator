@@ -41,6 +41,7 @@ var _ = Describe("PCP", func() {
 		BeforeEach(func() {
 			cmd = &Command{
 				CommandName: "testdata/pcpsimulator.sh",
+				ServerAddr:  "127.0.0.1:5351",
 			}
 			req = &portmap.Request{
 				Protocol:    portmap.ProtocolTCP,

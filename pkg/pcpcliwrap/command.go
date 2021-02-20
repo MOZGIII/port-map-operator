@@ -10,6 +10,10 @@ import (
 
 type Command struct {
 	CommandName string
+
+	// If empty, server autodiscovery will be attempted.
+	// Might fail though, depending on the runtime environment.
+	ServerAddr string
 }
 
 func (c *Command) Exec(ctx context.Context, req *portmap.Request) (*portmap.Response, error) {
@@ -23,11 +27,17 @@ func (c *Command) Exec(ctx context.Context, req *portmap.Request) (*portmap.Resp
 }
 
 func (c *Command) prepareCommand(ctx context.Context, req *portmap.Request) *exec.Cmd {
-	// nolint: gosec
-	return exec.CommandContext(ctx, c.CommandName,
+	args := []string{
 		"--protocol", fmt.Sprintf("%d", req.Protocol),
 		"--internal", fmt.Sprintf(":%d", req.NodePort),
 		"--external", fmt.Sprintf(":%d", req.GatewayPort),
 		"--lifetime", fmt.Sprintf("%d", req.Lifetime),
-	)
+	}
+
+	if c.CommandName != "" {
+		args = append(args, "--server", c.ServerAddr)
+	}
+
+	// nolint: gosec
+	return exec.CommandContext(ctx, c.CommandName, args...)
 }
