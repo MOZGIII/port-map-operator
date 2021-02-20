@@ -51,3 +51,13 @@ the OpenWRT it can be found at the UPnP page.
 If everything works, you (or anyone in the internet) should be able to reach
 the service via the IP and the port of the service.
 In the example above - the service will be available at `1.2.3.4:1234`.
+
+## Caveats
+
+### Mapping ports lower than 1024
+
+When trying to map ports in the range 0-1024, you may find that the mapping does
+not work. This is a security measure taken by the PCP servers to prevent abuse.
+You should be able to tune your PCP server (router) to allow port maps in
+the 0-1024 for your Kubernetes nodes if you really want to.
+See the documentation on your PCP server / router for more info.
