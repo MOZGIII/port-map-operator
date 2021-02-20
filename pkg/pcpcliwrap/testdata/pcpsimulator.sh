@@ -33,7 +33,7 @@ fi
 # Portable date invocation (GNU/BSD versions).
 # In the format like `Sat Feb 13 22:23:42 2021`
 # shellcheck disable=SC2251
-! LEASE_DATE_END="$(LANG=C date -d 'in 120 seconds' +'%c' 2>/dev/null)"
+! LEASE_DATE_END="$(LANG=C date -d '120 seconds' +'%c' 2>/dev/null)"
 BSD_DATE_EXITCODE="$?"
 if [[ "$BSD_DATE_EXITCODE" -eq 0 ]]; then
   LEASE_DATE_END="$(LANG=C date -v+120S +'%c' 2>/dev/null)"
