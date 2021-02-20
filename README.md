@@ -9,6 +9,14 @@ It does not perform real load balancing of any kind, but just takes care of
 the port forwarding so traffic can reach the cluster node.
 Kubernetes still does its internal service-level load balancing.
 
+## Requirements
+
+- Kubernetes cluster that can run `Pod`s with `hostNetwork: true`
+- Router that supports [PCP](https://tools.ietf.org/html/rfc6887)
+  for port mapping
+- No other controllers implementing `LoadBalancer` `Service` type running in
+  the cluster (to avoid conflicts)
+
 ## Deployment
 
 See the `config` dir.
