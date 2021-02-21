@@ -13,5 +13,5 @@ require (
 	sigs.k8s.io/controller-runtime v0.8.2
 	sigs.k8s.io/controller-tools v0.4.1
 	sigs.k8s.io/kustomize/kustomize/v3 v3.10.0
-	sigs.k8s.io/kustomize/kyaml v0.10.9
+	sigs.k8s.io/kustomize/kyaml v0.10.10
 )
