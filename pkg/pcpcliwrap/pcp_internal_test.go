@@ -57,7 +57,7 @@ var _ = Describe("PCP", func() {
 			Expect(res.NodePort).To(Equal(portmap.Port(32100)))
 			Expect(res.GatewayPort).To(Equal(portmap.Port(1024)))
 			Expect(res.GatewayIP).To(Equal(net.IPv4(1, 2, 3, 4)))
-			Expect(res.Lifetime).To(BeNumerically("~", 120, 1))
+			Expect(res.Lifetime).To(BeNumerically("~", 120, 2))
 		})
 	})
 
