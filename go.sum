@@ -1224,8 +1224,8 @@ sigs.k8s.io/kustomize/kustomize/v3 v3.10.0 h1:2ceyieTUl0Y5pRKAypYg1UkDSGV23cgxke
 sigs.k8s.io/kustomize/kustomize/v3 v3.10.0/go.mod h1:spVXMybMUUCzxzdS3TUxJU6s3kXPACyD1lK/cG+TOXI=
 sigs.k8s.io/kustomize/kyaml v0.10.9 h1:n3WNdvPPReRNDxW+XXd2JlyZ8EII721I21D1DBpBVBE=
 sigs.k8s.io/kustomize/kyaml v0.10.9/go.mod h1:K9yg1k/HB/6xNOf5VH3LhTo1DK9/5ykSZO5uIv+Y/1k=
-sigs.k8s.io/kustomize/kyaml v0.10.10 h1:caAxDDkaXZp+0kDsZVik4leFJV8LCy09PdVqpaoNeF4=
-sigs.k8s.io/kustomize/kyaml v0.10.10/go.mod h1:K9yg1k/HB/6xNOf5VH3LhTo1DK9/5ykSZO5uIv+Y/1k=
+sigs.k8s.io/kustomize/kyaml v0.10.11 h1:7KzaMS6TtwhGQW6hkw8umC2zFtSGAQPdAMagfautnkw=
+sigs.k8s.io/kustomize/kyaml v0.10.11/go.mod h1:uD7q6dIrZV02fBV6D7FOgdOBcLfUmhG3ExxDIGbUM3w=
 sigs.k8s.io/structured-merge-diff/v4 v4.0.2 h1:YHQV7Dajm86OuqnIR6zAelnDWBRjo+YhYV9PmGrh1s8=
 sigs.k8s.io/structured-merge-diff/v4 v4.0.2/go.mod h1:bJZC9H9iH24zzfZ/41RGcq60oK1F7G282QMXDPYydCw=
 sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=
