@@ -1049,7 +1049,7 @@ sigs.k8s.io/kustomize/kustomize/v3/commands/internal/util
 sigs.k8s.io/kustomize/kustomize/v3/commands/openapi
 sigs.k8s.io/kustomize/kustomize/v3/commands/openapi/info
 sigs.k8s.io/kustomize/kustomize/v3/commands/version
-# sigs.k8s.io/kustomize/kyaml v0.10.11
+# sigs.k8s.io/kustomize/kyaml v0.10.13
 ## explicit
 sigs.k8s.io/kustomize/kyaml/comments
 sigs.k8s.io/kustomize/kyaml/errors
