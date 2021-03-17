@@ -326,7 +326,7 @@ github.com/nbutton23/zxcvbn-go/utils/math
 github.com/nishanths/exhaustive
 # github.com/nishanths/predeclared v0.2.1
 github.com/nishanths/predeclared/passes/predeclared
-# github.com/nxadm/tail v1.4.4
+# github.com/nxadm/tail v1.4.8
 github.com/nxadm/tail
 github.com/nxadm/tail/ratelimiter
 github.com/nxadm/tail/util
@@ -334,7 +334,7 @@ github.com/nxadm/tail/watch
 github.com/nxadm/tail/winfile
 # github.com/olekukonko/tablewriter v0.0.4
 github.com/olekukonko/tablewriter
-# github.com/onsi/ginkgo v1.15.0
+# github.com/onsi/ginkgo v1.15.2
 ## explicit
 github.com/onsi/ginkgo
 github.com/onsi/ginkgo/config
