@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go/token"
 	"io/ioutil"
+	"reflect"
 
 	"github.com/BurntSushi/toml"
 	"github.com/mgechev/dots"
@@ -109,7 +110,7 @@ func NewRevive(cfg *config.ReviveSettings) *goanalysis.Linter {
 			for i := range results {
 				issues = append(issues, goanalysis.NewIssue(&result.Issue{
 					Severity: string(results[i].Severity),
-					Text:     fmt.Sprintf("%q", results[i].Failure.Failure),
+					Text:     fmt.Sprintf("%s: %s", results[i].RuleName, results[i].Failure.Failure),
 					Pos: token.Position{
 						Filename: results[i].Position.Start.Filename,
 						Line:     results[i].Position.Start.Line,
@@ -136,20 +137,22 @@ func NewRevive(cfg *config.ReviveSettings) *goanalysis.Linter {
 // https://github.com/golangci/golangci-lint/issues/1745
 // https://github.com/mgechev/revive/blob/389ba853b0b3587f0c3b71b5f0c61ea4e23928ec/config/config.go#L155
 func getReviveConfig(cfg *config.ReviveSettings) (*lint.Config, error) {
-	rawRoot := createConfigMap(cfg)
-
-	buf := bytes.NewBuffer(nil)
-
-	err := toml.NewEncoder(buf).Encode(rawRoot)
-	if err != nil {
-		return nil, err
-	}
-
 	conf := defaultConfig()
 
-	_, err = toml.DecodeReader(buf, conf)
-	if err != nil {
-		return nil, err
+	if !reflect.DeepEqual(cfg, &config.ReviveSettings{}) {
+		rawRoot := createConfigMap(cfg)
+		buf := bytes.NewBuffer(nil)
+
+		err := toml.NewEncoder(buf).Encode(rawRoot)
+		if err != nil {
+			return nil, err
+		}
+
+		conf = &lint.Config{}
+		_, err = toml.DecodeReader(buf, conf)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	normalizeConfig(conf)
