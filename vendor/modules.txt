@@ -1049,7 +1049,7 @@ sigs.k8s.io/kustomize/kustomize/v3/commands/internal/util
 sigs.k8s.io/kustomize/kustomize/v3/commands/openapi
 sigs.k8s.io/kustomize/kustomize/v3/commands/openapi/info
 sigs.k8s.io/kustomize/kustomize/v3/commands/version
-# sigs.k8s.io/kustomize/kyaml v0.10.11
+# sigs.k8s.io/kustomize/kyaml v0.10.17
 ## explicit
 sigs.k8s.io/kustomize/kyaml/comments
 sigs.k8s.io/kustomize/kyaml/errors
@@ -1067,11 +1067,7 @@ sigs.k8s.io/kustomize/kyaml/kio/kioutil
 sigs.k8s.io/kustomize/kyaml/krmfile
 sigs.k8s.io/kustomize/kyaml/openapi
 sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi
-sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1184
-sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1186
-sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1188
-sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1190
-sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1191
+sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1204
 sigs.k8s.io/kustomize/kyaml/openapi/kustomizationapi
 sigs.k8s.io/kustomize/kyaml/pathutil
 sigs.k8s.io/kustomize/kyaml/runfn
