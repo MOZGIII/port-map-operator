@@ -79,29 +79,14 @@ github.com/go-errors/errors
 github.com/go-logr/logr
 # github.com/go-logr/zapr v0.2.0
 github.com/go-logr/zapr
-# github.com/go-openapi/analysis v0.19.5
-github.com/go-openapi/analysis
-github.com/go-openapi/analysis/internal
-# github.com/go-openapi/errors v0.19.2
-github.com/go-openapi/errors
 # github.com/go-openapi/jsonpointer v0.19.3
 github.com/go-openapi/jsonpointer
 # github.com/go-openapi/jsonreference v0.19.3
 github.com/go-openapi/jsonreference
-# github.com/go-openapi/loads v0.19.4
-github.com/go-openapi/loads
-# github.com/go-openapi/runtime v0.19.4
-github.com/go-openapi/runtime
 # github.com/go-openapi/spec v0.19.5
 github.com/go-openapi/spec
-# github.com/go-openapi/strfmt v0.19.5
-github.com/go-openapi/strfmt
 # github.com/go-openapi/swag v0.19.5
 github.com/go-openapi/swag
-# github.com/go-openapi/validate v0.19.8
-github.com/go-openapi/validate
-# github.com/go-stack/stack v1.8.0
-github.com/go-stack/stack
 # github.com/go-toolsmith/astcast v1.0.0
 github.com/go-toolsmith/astcast
 # github.com/go-toolsmith/astcopy v1.0.0
@@ -480,13 +465,6 @@ github.com/xlab/treeprint
 # github.com/yujunz/go-getter v1.5.1-lite.0.20201201013212-6d9c071adddf
 github.com/yujunz/go-getter
 github.com/yujunz/go-getter/helper/url
-# go.mongodb.org/mongo-driver v1.1.2
-go.mongodb.org/mongo-driver/bson
-go.mongodb.org/mongo-driver/bson/bsoncodec
-go.mongodb.org/mongo-driver/bson/bsonrw
-go.mongodb.org/mongo-driver/bson/bsontype
-go.mongodb.org/mongo-driver/bson/primitive
-go.mongodb.org/mongo-driver/x/bsonx/bsoncore
 # go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5
 go.starlark.net/internal/compile
 go.starlark.net/internal/spell
@@ -899,8 +877,13 @@ k8s.io/component-base/config
 k8s.io/component-base/config/v1alpha1
 # k8s.io/klog/v2 v2.4.0
 k8s.io/klog/v2
-# k8s.io/kube-openapi v0.0.0-20201113171705-d219536bb9fd
+# k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e
 k8s.io/kube-openapi/pkg/util/proto
+k8s.io/kube-openapi/pkg/validation/errors
+k8s.io/kube-openapi/pkg/validation/spec
+k8s.io/kube-openapi/pkg/validation/strfmt
+k8s.io/kube-openapi/pkg/validation/strfmt/bson
+k8s.io/kube-openapi/pkg/validation/validate
 # k8s.io/utils v0.0.0-20210111153108-fddb29f9d009
 k8s.io/utils/buffer
 k8s.io/utils/integer
@@ -1049,7 +1032,7 @@ sigs.k8s.io/kustomize/kustomize/v3/commands/internal/util
 sigs.k8s.io/kustomize/kustomize/v3/commands/openapi
 sigs.k8s.io/kustomize/kustomize/v3/commands/openapi/info
 sigs.k8s.io/kustomize/kustomize/v3/commands/version
-# sigs.k8s.io/kustomize/kyaml v0.10.11
+# sigs.k8s.io/kustomize/kyaml v0.10.19
 ## explicit
 sigs.k8s.io/kustomize/kyaml/comments
 sigs.k8s.io/kustomize/kyaml/errors
@@ -1067,11 +1050,7 @@ sigs.k8s.io/kustomize/kyaml/kio/kioutil
 sigs.k8s.io/kustomize/kyaml/krmfile
 sigs.k8s.io/kustomize/kyaml/openapi
 sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi
-sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1184
-sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1186
-sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1188
-sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1190
-sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1191
+sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi/v1204
 sigs.k8s.io/kustomize/kyaml/openapi/kustomizationapi
 sigs.k8s.io/kustomize/kyaml/pathutil
 sigs.k8s.io/kustomize/kyaml/runfn
