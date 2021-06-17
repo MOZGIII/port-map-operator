@@ -5,8 +5,10 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"regexp"
 
-	"github.com/quasilyte/go-ruleguard/internal/mvdan.cc/gogrep"
+	"github.com/quasilyte/go-ruleguard/internal/gogrep"
+	"github.com/quasilyte/go-ruleguard/nodetag"
 	"github.com/quasilyte/go-ruleguard/ruleguard/quasigo"
 )
 
@@ -17,9 +19,15 @@ type goRuleSet struct {
 }
 
 type scopedGoRuleSet struct {
-	uncategorized   []goRule
-	categorizedNum  int
-	rulesByCategory [nodeCategoriesCount][]goRule
+	categorizedNum int
+	rulesByTag     [nodetag.NumBuckets][]goRule
+	commentRules   []goCommentRule
+}
+
+type goCommentRule struct {
+	base          goRule
+	pat           *regexp.Regexp
+	captureGroups bool
 }
 
 type goRule struct {
@@ -54,7 +62,7 @@ type filterParams struct {
 
 	importer *goImporter
 
-	values map[string]ast.Node
+	match matchData
 
 	nodeText func(n ast.Node) []byte
 
@@ -62,8 +70,14 @@ type filterParams struct {
 	varname string
 }
 
+func (params *filterParams) subNode(name string) ast.Node {
+	n, _ := params.match.CapturedByName(name)
+	return n
+}
+
 func (params *filterParams) subExpr(name string) ast.Expr {
-	switch n := params.values[name].(type) {
+	n, _ := params.match.CapturedByName(name)
+	switch n := n.(type) {
 	case ast.Expr:
 		return n
 	case *ast.ExprStmt:
@@ -103,7 +117,7 @@ func mergeRuleSets(toMerge []*goRuleSet) (*goRuleSet, error) {
 			if prevPos, ok := out.groups[group]; ok {
 				newRef := fmt.Sprintf("%s:%d", pos.Filename, pos.Line)
 				oldRef := fmt.Sprintf("%s:%d", prevPos.Filename, prevPos.Line)
-				return nil, fmt.Errorf("%s: redefenition of %s(), previously defined at %s", newRef, group, oldRef)
+				return nil, fmt.Errorf("%s: redefinition of %s(), previously defined at %s", newRef, group, oldRef)
 			}
 			out.groups[group] = pos
 		}
@@ -113,11 +127,11 @@ func mergeRuleSets(toMerge []*goRuleSet) (*goRuleSet, error) {
 }
 
 func appendScopedRuleSet(dst, src *scopedGoRuleSet) *scopedGoRuleSet {
-	dst.uncategorized = append(dst.uncategorized, cloneRuleSlice(src.uncategorized)...)
-	for cat, rules := range src.rulesByCategory {
-		dst.rulesByCategory[cat] = append(dst.rulesByCategory[cat], cloneRuleSlice(rules)...)
+	for tag, rules := range src.rulesByTag {
+		dst.rulesByTag[tag] = append(dst.rulesByTag[tag], cloneRuleSlice(rules)...)
 		dst.categorizedNum += len(rules)
 	}
+	dst.commentRules = append(dst.commentRules, src.commentRules...)
 	return dst
 }
 
