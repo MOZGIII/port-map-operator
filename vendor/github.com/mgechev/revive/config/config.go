@@ -72,11 +72,13 @@ var allRules = append([]lint.Rule{
 	&rule.UnhandledErrorRule{},
 	&rule.CognitiveComplexityRule{},
 	&rule.StringOfIntRule{},
+	&rule.StringFormatRule{},
 	&rule.EarlyReturnRule{},
 	&rule.UnconditionalRecursionRule{},
 	&rule.IdenticalBranchesRule{},
 	&rule.DeferRule{},
 	&rule.UnexportedNamingRule{},
+	&rule.FunctionLength{},
 }, defaultRules...)
 
 var allFormatters = []lint.Formatter{
@@ -88,6 +90,7 @@ var allFormatters = []lint.Formatter{
 	&formatter.Unix{},
 	&formatter.Checkstyle{},
 	&formatter.Plain{},
+	&formatter.Sarif{},
 }
 
 func getFormatters() map[string]lint.Formatter {
@@ -98,19 +101,48 @@ func getFormatters() map[string]lint.Formatter {
 	return result
 }
 
-// GetLintingRules yields the linting rules activated in the configuration
+// GetLintingRules yields the linting rules that must be applied by the linter
 func GetLintingRules(config *lint.Config) ([]lint.Rule, error) {
+	if config.EnableAllRules {
+		return getAllRules(config)
+	}
+
+	return getEnabledRules(config)
+}
+
+// getAllRules yields the list of all available rules except those disabled by configuration
+func getAllRules(config *lint.Config) ([]lint.Rule, error) {
+	lintingRules := []lint.Rule{}
+	for _, r := range allRules {
+		ruleConf := config.Rules[r.Name()]
+		if ruleConf.Disabled {
+			continue // skip disabled rules
+		}
+
+		lintingRules = append(lintingRules, r)
+	}
+
+	return lintingRules, nil
+}
+
+// getEnabledRules yields the list of rules that are enabled by configuration
+func getEnabledRules(config *lint.Config) ([]lint.Rule, error) {
 	rulesMap := map[string]lint.Rule{}
 	for _, r := range allRules {
 		rulesMap[r.Name()] = r
 	}
 
 	lintingRules := []lint.Rule{}
-	for name := range config.Rules {
+	for name, ruleConfig := range config.Rules {
 		rule, ok := rulesMap[name]
 		if !ok {
 			return nil, fmt.Errorf("cannot find rule: %s", name)
 		}
+
+		if ruleConfig.Disabled {
+			continue // skip disabled rules
+		}
+
 		lintingRules = append(lintingRules, rule)
 	}
 
