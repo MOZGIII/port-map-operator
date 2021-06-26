@@ -61,3 +61,11 @@ not work. This is a security measure taken by the PCP servers to prevent abuse.
 You should be able to tune your PCP server (router) to allow port maps in
 the 0-1024 for your Kubernetes nodes if you really want to.
 See the documentation on your PCP server / router for more info.
+
+## Development
+
+### Testing
+
+```bash
+hack/intestenv.sh go test ./...
+```
