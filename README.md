@@ -69,3 +69,11 @@ See the documentation on your PCP server / router for more info.
 ```bash
 hack/intestenv.sh go test ./...
 ```
+
+### Updating dependencies
+
+```bash
+./go-vendor-update.sh
+```
+
+or just merge what dependabot proposes.
