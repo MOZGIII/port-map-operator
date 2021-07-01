@@ -1106,17 +1106,19 @@ sigs.k8s.io/kustomize/kustomize/v3/commands/internal/util
 sigs.k8s.io/kustomize/kustomize/v3/commands/openapi
 sigs.k8s.io/kustomize/kustomize/v3/commands/openapi/info
 sigs.k8s.io/kustomize/kustomize/v3/commands/version
-# sigs.k8s.io/kustomize/kyaml v0.10.21
+# sigs.k8s.io/kustomize/kyaml v0.11.0
 ## explicit
 sigs.k8s.io/kustomize/kyaml/comments
 sigs.k8s.io/kustomize/kyaml/errors
 sigs.k8s.io/kustomize/kyaml/ext
 sigs.k8s.io/kustomize/kyaml/fieldmeta
+sigs.k8s.io/kustomize/kyaml/filesys
 sigs.k8s.io/kustomize/kyaml/filtersutil
 sigs.k8s.io/kustomize/kyaml/fn/runtime/container
 sigs.k8s.io/kustomize/kyaml/fn/runtime/exec
 sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil
 sigs.k8s.io/kustomize/kyaml/fn/runtime/starlark
+sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/go-yaml/yaml
 sigs.k8s.io/kustomize/kyaml/internal/forked/github.com/qri-io/starlib/util
 sigs.k8s.io/kustomize/kyaml/kio
 sigs.k8s.io/kustomize/kyaml/kio/filters
