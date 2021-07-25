@@ -47,8 +47,8 @@ func (o Overrides) UnmarshalJSON(data []byte) error {
 	}
 
 	for k, v := range m {
-		split := strings.SplitN(k, "/", 2)
-		if len(split) != 2 { // nolint: gomnd
+		split := strings.SplitN(k, "/", 2) // nolint: gomnd
+		if len(split) != 2 {               // nolint: gomnd
 			return errors.Errorf("unable to split the key")
 		}
 
