@@ -101,6 +101,9 @@ type RunFns struct {
 	// If it is true, the empty result will be provided as input to the next
 	// function in the list.
 	ContinueOnEmptyResult bool
+
+	// WorkingDir specifies which working directory an exec function should run in.
+	WorkingDir string
 }
 
 // Execute runs the command
@@ -496,7 +499,6 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 			}
 			p = filepath.ToSlash(filepath.Join(r.Path, filepath.Dir(p), spec.Starlark.Path))
 		}
-		fmt.Println(p)
 
 		sf := &starlark.Filter{Name: spec.Starlark.Name, Path: p, URL: spec.Starlark.URL}
 
@@ -508,7 +510,10 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 	}
 
 	if r.EnableExec && spec.Exec.Path != "" {
-		ef := &exec.Filter{Path: spec.Exec.Path}
+		ef := &exec.Filter{
+			Path:       spec.Exec.Path,
+			WorkingDir: r.WorkingDir,
+		}
 
 		ef.FunctionConfig = api
 		ef.GlobalScope = r.GlobalScope

@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -36,6 +37,9 @@ type ByteReadWriter struct {
 	// the Resources, otherwise they will be cleared.
 	KeepReaderAnnotations bool
 
+	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
+	PreserveSeqIndent bool
+
 	// Style is a style that is set on the Resource Node Document.
 	Style yaml.Style
 
@@ -52,6 +56,7 @@ func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
 	b := &ByteReader{
 		Reader:                rw.Reader,
 		OmitReaderAnnotations: rw.OmitReaderAnnotations,
+		PreserveSeqIndent:     rw.PreserveSeqIndent,
 	}
 	val, err := b.Read()
 	if rw.FunctionConfig == nil {
@@ -108,8 +113,11 @@ type ByteReader struct {
 	Reader io.Reader
 
 	// OmitReaderAnnotations will configures Read to skip setting the config.kubernetes.io/index
-	// annotation on Resources as they are Read.
+	// and internal.config.kubernetes.io/seqindent annotations on Resources as they are Read.
 	OmitReaderAnnotations bool
+
+	// PreserveSeqIndent if true adds kioutil.SeqIndentAnnotation to each resource
+	PreserveSeqIndent bool
 
 	// SetAnnotations is a map of caller specified annotations to set on resources as they are read
 	// These are independent of the annotations controlled by OmitReaderAnnotations
@@ -133,7 +141,42 @@ type ByteReader struct {
 
 var _ Reader = &ByteReader{}
 
+// splitDocuments returns a slice of all documents contained in a YAML string. Multiple documents can be divided by the
+// YAML document separator (---). It allows for white space and comments to be after the separator on the same line,
+// but will return an error if anything else is on the line.
+func splitDocuments(s string) ([]string, error) {
+	docs := make([]string, 0)
+	if len(s) > 0 {
+		// The YAML document separator is any line that starts with ---
+		yamlSeparatorRegexp := regexp.MustCompile(`\n---.*\n`)
+
+		// Find all separators, check them for invalid content, and append each document to docs
+		separatorLocations := yamlSeparatorRegexp.FindAllStringIndex(s, -1)
+		prev := 0
+		for i := range separatorLocations {
+			loc := separatorLocations[i]
+			separator := s[loc[0]:loc[1]]
+
+			// If the next non-whitespace character on the line following the separator is not a comment, return an error
+			trimmedContentAfterSeparator := strings.TrimSpace(separator[4:])
+			if len(trimmedContentAfterSeparator) > 0 && trimmedContentAfterSeparator[0] != '#' {
+				return nil, errors.Errorf("invalid document separator: %s", strings.TrimSpace(separator))
+			}
+
+			docs = append(docs, s[prev:loc[0]])
+			prev = loc[1]
+		}
+		docs = append(docs, s[prev:])
+	}
+
+	return docs, nil
+}
+
 func (r *ByteReader) Read() ([]*yaml.RNode, error) {
+	if r.PreserveSeqIndent && r.OmitReaderAnnotations {
+		return nil, errors.Errorf(`"PreserveSeqIndent" option adds a reader annotation, please set "OmitReaderAnnotations" to false`)
+	}
+
 	output := ResourceNodeSlice{}
 
 	// by manually splitting resources -- otherwise the decoder will get the Resource
@@ -144,8 +187,12 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 		return nil, errors.Wrap(err)
 	}
 
-	// replace the ending \r\n (line ending used in windows) with \n and then separate by \n---\n
-	values := strings.Split(strings.ReplaceAll(input.String(), "\r\n", "\n"), "\n---\n")
+	// Replace the ending \r\n (line ending used in windows) with \n and then split it into multiple YAML documents
+	// if it contains document separators (---)
+	values, err := splitDocuments(strings.ReplaceAll(input.String(), "\r\n", "\n"))
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
 
 	index := 0
 	for i := range values {
@@ -155,10 +202,11 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 			values[i] += "\n"
 		}
 		decoder := yaml.NewDecoder(bytes.NewBufferString(values[i]))
-		node, err := r.decode(index, decoder)
+		node, err := r.decode(values[i], index, decoder)
 		if err == io.EOF {
 			continue
 		}
+
 		if err != nil {
 			return nil, errors.Wrap(err)
 		}
@@ -209,7 +257,7 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 	return output, nil
 }
 
-func (r *ByteReader) decode(index int, decoder *yaml.Decoder) (*yaml.RNode, error) {
+func (r *ByteReader) decode(originalYAML string, index int, decoder *yaml.Decoder) (*yaml.RNode, error) {
 	node := &yaml.Node{}
 	err := decoder.Decode(node)
 	if err == io.EOF {
@@ -232,6 +280,14 @@ func (r *ByteReader) decode(index int, decoder *yaml.Decoder) (*yaml.RNode, erro
 	}
 	if !r.OmitReaderAnnotations {
 		r.SetAnnotations[kioutil.IndexAnnotation] = fmt.Sprintf("%d", index)
+
+		if r.PreserveSeqIndent {
+			// derive and add the seqindent annotation
+			seqIndentStyle := yaml.DeriveSeqIndentStyle(originalYAML)
+			if seqIndentStyle != "" {
+				r.SetAnnotations[kioutil.SeqIndentAnnotation] = fmt.Sprintf("%s", seqIndentStyle)
+			}
+		}
 	}
 	var keys []string
 	for k := range r.SetAnnotations {
