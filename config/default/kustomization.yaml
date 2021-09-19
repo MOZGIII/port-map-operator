@@ -2,5 +2,4 @@ namespace: port-map-operator-system
 namePrefix: port-map-operator-
 
 bases:
-- ../rbac
-- ../manager
+- ../main
