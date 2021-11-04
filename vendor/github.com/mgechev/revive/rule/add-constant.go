@@ -2,10 +2,11 @@ package rule
 
 import (
 	"fmt"
-	"github.com/mgechev/revive/lint"
 	"go/ast"
 	"strconv"
 	"strings"
+
+	"github.com/mgechev/revive/lint"
 )
 
 const (
@@ -18,7 +19,7 @@ const (
 type whiteList map[string]map[string]bool
 
 func newWhiteList() whiteList {
-	return map[string]map[string]bool{kindINT: map[string]bool{}, kindFLOAT: map[string]bool{}, kindSTRING: map[string]bool{}}
+	return map[string]map[string]bool{kindINT: {}, kindFLOAT: {}, kindSTRING: {}}
 }
 
 func (wl whiteList) add(kind string, list string) {
@@ -81,7 +82,7 @@ func (r *AddConstantRule) Apply(file *lint.File, arguments lint.Arguments) []lin
 		failures = append(failures, failure)
 	}
 
-	w := lintAddConstantRule{onFailure: onFailure, strLits: make(map[string]int, 0), strLitLimit: strLitLimit, whiteLst: whiteList}
+	w := lintAddConstantRule{onFailure: onFailure, strLits: make(map[string]int), strLitLimit: strLitLimit, whiteLst: whiteList}
 
 	ast.Walk(w, file.AST)
 

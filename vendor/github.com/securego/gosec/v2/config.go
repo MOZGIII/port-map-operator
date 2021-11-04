@@ -20,6 +20,8 @@ type GlobalOption string
 const (
 	// Nosec global option for #nosec directive
 	Nosec GlobalOption = "nosec"
+	// ShowIgnored defines whether nosec issues are counted as finding or not
+	ShowIgnored GlobalOption = "show-ignored"
 	// Audit global option which indicates that gosec runs in audit mode
 	Audit GlobalOption = "audit"
 	// NoSecAlternative global option alternative for #nosec directive
@@ -56,7 +58,7 @@ func (c Config) convertGlobals() {
 
 // ReadFrom implements the io.ReaderFrom interface. This
 // should be used with io.Reader to load configuration from
-//file or from string etc.
+// file or from string etc.
 func (c Config) ReadFrom(r io.Reader) (int64, error) {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {

@@ -19,11 +19,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/securego/gosec/v2/cwe"
 	"go/ast"
 	"go/token"
 	"os"
 	"strconv"
+
+	"github.com/securego/gosec/v2/cwe"
 )
 
 // Score type used by severity and confidence values
@@ -96,6 +97,7 @@ type Issue struct {
 	Code       string        `json:"code"`       // Impacted code line
 	Line       string        `json:"line"`       // Line number in file
 	Col        string        `json:"column"`     // Column number in line
+	NoSec      bool          `json:"nosec"`      // true if the issue is nosec
 }
 
 // FileLocation point out the file path and line number in file

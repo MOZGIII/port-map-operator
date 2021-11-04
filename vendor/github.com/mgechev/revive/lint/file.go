@@ -91,10 +91,7 @@ func (f *File) IsUntypedConst(expr ast.Expr) (defType string, ok bool) {
 }
 
 func (f *File) isMain() bool {
-	if f.AST.Name.Name == "main" {
-		return true
-	}
-	return false
+	return f.AST.Name.Name == "main"
 }
 
 const directiveSpecifyDisableReason = "specify-disable-reason"
@@ -207,7 +204,7 @@ func (f *File) disabledIntervals(rules []Rule, mustSpecifyDisableReason bool, fa
 		for _, c := range comments {
 			match := re.FindStringSubmatch(c.Text)
 			if len(match) == 0 {
-				return
+				continue
 			}
 
 			ruleNames := []string{}

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go/token"
-	"io/ioutil"
+	"os"
 	"reflect"
 
 	"github.com/BurntSushi/toml"
@@ -27,7 +27,7 @@ const reviveName = "revive"
 
 var reviveDebugf = logutils.Debug("revive")
 
-// jsonObject defines a JSON object of an failure
+// jsonObject defines a JSON object of a failure
 type jsonObject struct {
 	Severity     lint.Severity
 	lint.Failure `json:",inline"`
@@ -65,7 +65,7 @@ func NewRevive(cfg *config.ReviveSettings) *goanalysis.Linter {
 				return nil, err
 			}
 
-			revive := lint.New(ioutil.ReadFile)
+			revive := lint.New(os.ReadFile)
 
 			lintingRules, err := reviveConfig.GetLintingRules(conf)
 			if err != nil {
@@ -182,6 +182,7 @@ func createConfigMap(cfg *config.ReviveSettings) map[string]interface{} {
 		"severity":              cfg.Severity,
 		"errorCode":             cfg.ErrorCode,
 		"warningCode":           cfg.WarningCode,
+		"enableAllRules":        cfg.EnableAllRules,
 	}
 
 	rawDirectives := map[string]map[string]interface{}{}
@@ -243,7 +244,6 @@ var defaultRules = []lint.Rule{
 	&rule.ExportedRule{},
 	&rule.VarNamingRule{},
 	&rule.IndentErrorFlowRule{},
-	&rule.IfReturnRule{},
 	&rule.RangeRule{},
 	&rule.ErrorfRule{},
 	&rule.ErrorNamingRule{},
