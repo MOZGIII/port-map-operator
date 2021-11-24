@@ -3,7 +3,7 @@ module github.com/MOZGIII/port-map-operator
 go 1.15
 
 require (
-	github.com/go-logr/logr v0.4.0
+	github.com/go-logr/logr v1.2.0
 	github.com/golangci/golangci-lint v1.41.1
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.13.0
