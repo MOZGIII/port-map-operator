@@ -78,7 +78,7 @@ github.com/go-critic/go-critic/checkers/internal/lintutil
 github.com/go-critic/go-critic/framework/linter
 # github.com/go-errors/errors v1.0.1
 github.com/go-errors/errors
-# github.com/go-logr/logr v0.4.0
+# github.com/go-logr/logr v1.2.1
 ## explicit
 github.com/go-logr/logr
 # github.com/go-logr/zapr v0.4.0
