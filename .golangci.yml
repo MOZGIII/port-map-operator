@@ -78,3 +78,6 @@ issues:
     - path: _test\.go
       linters:
         - gomnd
+  # The list of ids of default excludes to include or disable.
+  include:
+    - EXC0002 # disable excluding of issues about comments from golint
