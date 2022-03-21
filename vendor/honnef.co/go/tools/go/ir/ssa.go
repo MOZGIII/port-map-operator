@@ -764,6 +764,20 @@ type ChangeInterface struct {
 	X Value
 }
 
+// The SliceToArrayPointer instruction yields the conversion of slice X to
+// array pointer.
+//
+// Pos() returns the ast.CallExpr.Lparen, if the instruction arose
+// from an explicit conversion in the source.
+//
+// Example printed form:
+// 	t1 = SliceToArrayPointer <*[4]byte> t1
+//
+type SliceToArrayPointer struct {
+	register
+	X Value
+}
+
 // MakeInterface constructs an instance of an interface type from a
 // value of a concrete type.
 //
@@ -1729,6 +1743,10 @@ func (v *ChangeType) Operands(rands []*Value) []*Value {
 }
 
 func (v *Convert) Operands(rands []*Value) []*Value {
+	return append(rands, &v.X)
+}
+
+func (v *SliceToArrayPointer) Operands(rands []*Value) []*Value {
 	return append(rands, &v.X)
 }
 
