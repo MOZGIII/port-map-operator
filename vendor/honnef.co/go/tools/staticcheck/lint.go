@@ -34,6 +34,9 @@ import (
 	"honnef.co/go/tools/knowledge"
 	"honnef.co/go/tools/pattern"
 	"honnef.co/go/tools/printf"
+	"honnef.co/go/tools/staticcheck/fakejson"
+	"honnef.co/go/tools/staticcheck/fakereflect"
+	"honnef.co/go/tools/staticcheck/fakexml"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -254,10 +257,10 @@ var (
 	}
 
 	checkUnsupportedMarshal = map[string]CallCheck{
-		"encoding/json.Marshal":           checkUnsupportedMarshalImpl(knowledge.Arg("json.Marshal.v"), "json", "MarshalJSON", "MarshalText"),
-		"encoding/xml.Marshal":            checkUnsupportedMarshalImpl(knowledge.Arg("xml.Marshal.v"), "xml", "MarshalXML", "MarshalText"),
-		"(*encoding/json.Encoder).Encode": checkUnsupportedMarshalImpl(knowledge.Arg("(*encoding/json.Encoder).Encode.v"), "json", "MarshalJSON", "MarshalText"),
-		"(*encoding/xml.Encoder).Encode":  checkUnsupportedMarshalImpl(knowledge.Arg("(*encoding/xml.Encoder).Encode.v"), "xml", "MarshalXML", "MarshalText"),
+		"encoding/json.Marshal":           checkUnsupportedMarshalJSON,
+		"encoding/xml.Marshal":            checkUnsupportedMarshalXML,
+		"(*encoding/json.Encoder).Encode": checkUnsupportedMarshalJSON,
+		"(*encoding/xml.Encoder).Encode":  checkUnsupportedMarshalXML,
 	}
 
 	checkAtomicAlignment = map[string]CallCheck{
@@ -868,57 +871,37 @@ func checkNoopMarshalImpl(argN int, meths ...string) CallCheck {
 	}
 }
 
-func checkUnsupportedMarshalImpl(argN int, tag string, meths ...string) CallCheck {
-	// TODO(dh): flag slices and maps of unsupported types
-	return func(call *Call) {
-		msCache := &call.Instr.Parent().Prog.MethodSets
-
-		arg := call.Args[argN]
-		T := arg.Value.Value.Type()
-		Ts, ok := typeutil.Dereference(T).Underlying().(*types.Struct)
-		if !ok {
-			return
-		}
-		ms := msCache.MethodSet(T)
-		// TODO(dh): we're not checking the signature, which can cause false negatives.
-		// This isn't a huge problem, however, since vet complains about incorrect signatures.
-		for _, meth := range meths {
-			if ms.Lookup(nil, meth) != nil {
-				return
-			}
-		}
-		fields := typeutil.FlattenFields(Ts)
-		for _, field := range fields {
-			if !(field.Var.Exported()) {
-				continue
-			}
-			if reflect.StructTag(field.Tag).Get(tag) == "-" {
-				continue
-			}
-			ms := msCache.MethodSet(field.Var.Type())
-			// TODO(dh): we're not checking the signature, which can cause false negatives.
-			// This isn't a huge problem, however, since vet complains about incorrect signatures.
-			for _, meth := range meths {
-				if ms.Lookup(nil, meth) != nil {
-					return
-				}
-			}
-			switch field.Var.Type().Underlying().(type) {
-			case *types.Chan, *types.Signature:
-				arg.Invalid(fmt.Sprintf("trying to marshal chan or func value, field %s", fieldPath(T, field.Path)))
-			}
+func checkUnsupportedMarshalJSON(call *Call) {
+	arg := call.Args[0]
+	T := arg.Value.Value.Type()
+	if err := fakejson.Marshal(T); err != nil {
+		typ := types.TypeString(err.Type, types.RelativeTo(arg.Value.Value.Parent().Pkg.Pkg))
+		if err.Path == "x" {
+			arg.Invalid(fmt.Sprintf("trying to marshal unsupported type %s", typ))
+		} else {
+			arg.Invalid(fmt.Sprintf("trying to marshal unsupported type %s, via %s", typ, err.Path))
 		}
 	}
 }
 
-func fieldPath(start types.Type, indices []int) string {
-	p := start.String()
-	for _, idx := range indices {
-		field := typeutil.Dereference(start).Underlying().(*types.Struct).Field(idx)
-		start = field.Type()
-		p += "." + field.Name()
+func checkUnsupportedMarshalXML(call *Call) {
+	arg := call.Args[0]
+	T := arg.Value.Value.Type()
+	if err := fakexml.Marshal(T); err != nil {
+		switch err := err.(type) {
+		case *fakexml.UnsupportedTypeError:
+			typ := types.TypeString(err.Type, types.RelativeTo(arg.Value.Value.Parent().Pkg.Pkg))
+			if err.Path == "x" {
+				arg.Invalid(fmt.Sprintf("trying to marshal unsupported type %s", typ))
+			} else {
+				arg.Invalid(fmt.Sprintf("trying to marshal unsupported type %s, via %s", typ, err.Path))
+			}
+		case *fakexml.TagPathError:
+			// Vet does a better job at reporting this error, because it can flag the actual struct tags, not just the call to Marshal
+		default:
+			// These errors get reported by SA5008 instead, which can flag the actual fields, independently of calls to xml.Marshal
+		}
 	}
-	return p
 }
 
 func isInLoop(b *ir.BasicBlock) bool {
@@ -1135,7 +1118,7 @@ func CheckInfiniteEmptyLoop(pass *analysis.Pass) (interface{}, error) {
 			}
 			report.Report(pass, loop, "loop condition never changes or has a race condition")
 		}
-		report.Report(pass, loop, "this loop will spin, using 100%% CPU", report.ShortRange())
+		report.Report(pass, loop, "this loop will spin, using 100% CPU", report.ShortRange())
 	}
 	code.Preorder(pass, fn, (*ast.ForStmt)(nil))
 	return nil, nil
@@ -1360,19 +1343,24 @@ func CheckLhsRhsIdentical(pass *analysis.Pass) (interface{}, error) {
 	// happily flags fn() == fn() – so far, we've had nobody complain
 	// about a false positive, and it's caught several bugs in real
 	// code.
+	//
+	// We special case functions from the math/rand package. Someone ran
+	// into the following false positive: "rand.Intn(2) - rand.Intn(2), which I wrote to generate values {-1, 0, 1} with {0.25, 0.5, 0.25} probability."
 	fn := func(node ast.Node) {
 		op := node.(*ast.BinaryExpr)
 		switch op.Op {
 		case token.EQL, token.NEQ:
-			if isFloat(pass.TypesInfo.TypeOf(op.X)) {
-				// f == f and f != f might be used to check for NaN
-				return
-			}
 		case token.SUB, token.QUO, token.AND, token.REM, token.OR, token.XOR, token.AND_NOT,
 			token.LAND, token.LOR, token.LSS, token.GTR, token.LEQ, token.GEQ:
 		default:
 			// For some ops, such as + and *, it can make sense to
 			// have identical operands
+			return
+		}
+
+		if isFloat(pass.TypesInfo.TypeOf(op.X)) {
+			// 'float <op> float' makes sense for several operators.
+			// We've tried keeping an exact list of operators to allow, but floats keep surprising us. Let's just give up instead.
 			return
 		}
 
@@ -1397,6 +1385,38 @@ func CheckLhsRhsIdentical(pass *analysis.Pass) (interface{}, error) {
 			// 0 == 0 are slim.
 			return
 		}
+
+		if expr, ok := op.X.(*ast.CallExpr); ok {
+			call := code.CallName(pass, expr)
+			switch call {
+			case "math/rand.Int",
+				"math/rand.Int31",
+				"math/rand.Int31n",
+				"math/rand.Int63",
+				"math/rand.Int63n",
+				"math/rand.Intn",
+				"math/rand.Uint32",
+				"math/rand.Uint64",
+				"math/rand.ExpFloat64",
+				"math/rand.Float32",
+				"math/rand.Float64",
+				"math/rand.NormFloat64",
+				"(*math/rand.Rand).Int",
+				"(*math/rand.Rand).Int31",
+				"(*math/rand.Rand).Int31n",
+				"(*math/rand.Rand).Int63",
+				"(*math/rand.Rand).Int63n",
+				"(*math/rand.Rand).Intn",
+				"(*math/rand.Rand).Uint32",
+				"(*math/rand.Rand).Uint64",
+				"(*math/rand.Rand).ExpFloat64",
+				"(*math/rand.Rand).Float32",
+				"(*math/rand.Rand).Float64",
+				"(*math/rand.Rand).NormFloat64":
+				return
+			}
+		}
+
 		report.Report(pass, op, fmt.Sprintf("identical expressions on the left and right side of the '%s' operator", op.Op))
 	}
 	code.Preorder(pass, fn, (*ast.BinaryExpr)(nil))
@@ -2389,6 +2409,105 @@ func CheckIneffectiveAppend(pass *analysis.Pass) (interface{}, error) {
 		return true
 	}
 
+	// We have to be careful about aliasing.
+	// Multiple slices may refer to the same backing array,
+	// making appends observable even when we don't see the result of append be used anywhere.
+	//
+	// We will have to restrict ourselves to slices that have been allocated within the function,
+	// haven't been sliced,
+	// and haven't been passed anywhere that could retain them (such as function calls or memory stores).
+	//
+	// We check whether an append should be flagged in two steps.
+	//
+	// In the first step, we look at the data flow graph, starting in reverse from the argument to append, till we reach the root.
+	// This graph must only consist of the following instructions:
+	//
+	// - phi
+	// - sigma
+	// - slice
+	// - const nil
+	// - MakeSlice
+	// - Alloc
+	// - calls to append
+	//
+	// If this step succeeds, we look at all referrers of the values found in the first step, recursively.
+	// These referrers must either be in the set of values found in the first step,
+	// be DebugRefs,
+	// or fulfill the same type requirements as step 1, with the exception of appends, which are forbidden.
+	//
+	// If both steps succeed then we know that the backing array hasn't been aliased in an observable manner.
+	//
+	// We could relax these restrictions by making use of additional information:
+	// - if we passed the slice to a function that doesn't retain the slice then we can still flag it
+	// - if a slice has been sliced but is dead afterwards, we can flag appends to the new slice
+
+	// OPT(dh): We could cache the results of both validate functions.
+	// However, we only use these functions on values that we otherwise want to flag, which are very few.
+	// Not caching values hasn't increased the runtimes for the standard library nor k8s.
+	var validateArgument func(v ir.Value, seen map[ir.Value]struct{}) bool
+	validateArgument = func(v ir.Value, seen map[ir.Value]struct{}) bool {
+		if _, ok := seen[v]; ok {
+			// break cycle
+			return true
+		}
+		seen[v] = struct{}{}
+		switch v := v.(type) {
+		case *ir.Phi:
+			for _, edge := range v.Edges {
+				if !validateArgument(edge, seen) {
+					return false
+				}
+			}
+			return true
+		case *ir.Sigma:
+			return validateArgument(v.X, seen)
+		case *ir.Slice:
+			return validateArgument(v.X, seen)
+		case *ir.Const:
+			return true
+		case *ir.MakeSlice:
+			return true
+		case *ir.Alloc:
+			return true
+		case *ir.Call:
+			if isAppend(v) {
+				return validateArgument(v.Call.Args[0], seen)
+			}
+			return false
+		default:
+			return false
+		}
+	}
+
+	var validateReferrers func(v ir.Value, seen map[ir.Instruction]struct{}) bool
+	validateReferrers = func(v ir.Value, seen map[ir.Instruction]struct{}) bool {
+		for _, ref := range *v.Referrers() {
+			if _, ok := seen[ref]; ok {
+				continue
+			}
+
+			seen[ref] = struct{}{}
+			switch ref.(type) {
+			case *ir.Phi:
+			case *ir.Sigma:
+			case *ir.Slice:
+			case *ir.Const:
+			case *ir.MakeSlice:
+			case *ir.Alloc:
+			case *ir.DebugRef:
+			default:
+				return false
+			}
+
+			if ref, ok := ref.(ir.Value); ok {
+				if !validateReferrers(ref, seen) {
+					return false
+				}
+			}
+		}
+		return true
+	}
+
 	for _, fn := range pass.ResultOf[buildir.Analyzer].(*buildir.IR).SrcFuncs {
 		for _, block := range fn.Blocks {
 			for _, ins := range block.Instrs {
@@ -2434,7 +2553,29 @@ func CheckIneffectiveAppend(pass *analysis.Pass) (interface{}, error) {
 				}
 				walkRefs(*refs)
 
-				if !isUsed {
+				if isUsed {
+					continue
+				}
+
+				seen := map[ir.Value]struct{}{}
+				if !validateArgument(ins.(*ir.Call).Call.Args[0], seen) {
+					continue
+				}
+
+				seen2 := map[ir.Instruction]struct{}{}
+				for k := range seen {
+					// the only values we allow are also instructions, so this type assertion cannot fail
+					seen2[k.(ir.Instruction)] = struct{}{}
+				}
+				seen2[ins] = struct{}{}
+				failed := false
+				for v := range seen {
+					if !validateReferrers(v, seen2) {
+						failed = true
+						break
+					}
+				}
+				if !failed {
 					report.Report(pass, ins, "this result of append is never used, except maybe in other appends")
 				}
 			}
@@ -3705,7 +3846,12 @@ func CheckStructTags(pass *analysis.Pass) (interface{}, error) {
 	}
 
 	fn := func(node ast.Node) {
-		for _, field := range node.(*ast.StructType).Fields.List {
+		structNode := node.(*ast.StructType)
+		T := pass.TypesInfo.Types[structNode].Type.(*types.Struct)
+		rt := fakereflect.TypeAndCanAddr{
+			Type: T,
+		}
+		for i, field := range structNode.Fields.List {
 			if field.Tag == nil {
 				continue
 			}
@@ -3727,6 +3873,9 @@ func CheckStructTags(pass *analysis.Pass) (interface{}, error) {
 				case "json":
 					checkJSONTag(pass, field, v[0])
 				case "xml":
+					if _, err := fakexml.StructFieldInfo(rt.Field(i)); err != nil {
+						report.Report(pass, field.Tag, fmt.Sprintf("invalid XML tag: %s", err))
+					}
 					checkXMLTag(pass, field, v[0])
 				}
 			}
@@ -3790,28 +3939,21 @@ func checkXMLTag(pass *analysis.Pass, field *ast.Field, tag string) {
 	}
 	fields := strings.Split(tag, ",")
 	counts := map[string]int{}
-	var exclusives []string
 	for _, s := range fields[1:] {
 		switch s {
 		case "attr", "chardata", "cdata", "innerxml", "comment":
 			counts[s]++
-			if counts[s] == 1 {
-				exclusives = append(exclusives, s)
-			}
 		case "omitempty", "any":
 			counts[s]++
 		case "":
 		default:
-			report.Report(pass, field.Tag, fmt.Sprintf("unknown XML option %q", s))
+			report.Report(pass, field.Tag, fmt.Sprintf("invalid XML tag: unknown option %q", s))
 		}
 	}
 	for k, v := range counts {
 		if v > 1 {
-			report.Report(pass, field.Tag, fmt.Sprintf("duplicate XML option %q", k))
+			report.Report(pass, field.Tag, fmt.Sprintf("invalid XML tag: duplicate option %q", k))
 		}
-	}
-	if len(exclusives) > 1 {
-		report.Report(pass, field.Tag, fmt.Sprintf("XML options %s are mutually exclusive", strings.Join(exclusives, " and ")))
 	}
 }
 
@@ -3950,14 +4092,18 @@ func CheckMaybeNil(pass *analysis.Pass) (interface{}, error) {
 		maybeNil := map[ir.Value]ir.Instruction{}
 		for _, b := range fn.Blocks {
 			for _, instr := range b.Instrs {
-				if instr, ok := instr.(*ir.BinOp); ok {
-					var ptr ir.Value
-					if isNilConst(instr.X) {
-						ptr = instr.Y
-					} else if isNilConst(instr.Y) {
-						ptr = instr.X
+				// Originally we looked at all ir.BinOp, but that would lead to calls like 'assert(x != nil)' causing false positives.
+				// Restrict ourselves to actual if statements, as these are more likely to affect control flow in a way we can observe.
+				if instr, ok := instr.(*ir.If); ok {
+					if cond, ok := instr.Cond.(*ir.BinOp); ok {
+						var ptr ir.Value
+						if isNilConst(cond.X) {
+							ptr = cond.Y
+						} else if isNilConst(cond.Y) {
+							ptr = cond.X
+						}
+						maybeNil[ptr] = cond
 					}
-					maybeNil[ptr] = instr
 				}
 			}
 		}
@@ -3972,6 +4118,13 @@ func CheckMaybeNil(pass *analysis.Pass) (interface{}, error) {
 					ptr = instr.Addr
 				case *ir.IndexAddr:
 					ptr = instr.X
+					if _, ok := ptr.Type().Underlying().(*types.Slice); ok {
+						// indexing a nil slice does not cause a nil pointer panic
+						//
+						// Note: This also works around the bad lowering of range loops over slices
+						// (https://github.com/dominikh/go-tools/issues/1053)
+						continue
+					}
 				case *ir.FieldAddr:
 					ptr = instr.X
 				}
