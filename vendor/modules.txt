@@ -59,7 +59,7 @@ github.com/denis-tingajkin/go-header
 github.com/esimonov/ifshort/pkg/analyzer
 # github.com/ettle/strcase v0.1.1
 github.com/ettle/strcase
-# github.com/evanphx/json-patch v4.11.0+incompatible
+# github.com/evanphx/json-patch v4.12.0+incompatible
 github.com/evanphx/json-patch
 # github.com/fatih/color v1.12.0
 github.com/fatih/color
@@ -78,12 +78,12 @@ github.com/go-critic/go-critic/checkers/internal/lintutil
 github.com/go-critic/go-critic/framework/linter
 # github.com/go-errors/errors v1.0.1
 github.com/go-errors/errors
-# github.com/go-logr/logr v0.4.0
+# github.com/go-logr/logr v1.2.0
 ## explicit
 github.com/go-logr/logr
 # github.com/go-logr/zapr v0.4.0
 github.com/go-logr/zapr
-# github.com/go-openapi/jsonpointer v0.19.3
+# github.com/go-openapi/jsonpointer v0.19.5
 github.com/go-openapi/jsonpointer
 # github.com/go-openapi/jsonreference v0.19.3
 github.com/go-openapi/jsonreference
@@ -186,6 +186,12 @@ github.com/golangci/misspell
 github.com/golangci/revgrep
 # github.com/golangci/unconvert v0.0.0-20180507085042-28b1c447d1f4
 github.com/golangci/unconvert
+# github.com/google/gnostic v0.5.7-v3refs
+github.com/google/gnostic/compiler
+github.com/google/gnostic/extensions
+github.com/google/gnostic/jsonschema
+github.com/google/gnostic/openapiv2
+github.com/google/gnostic/openapiv3
 # github.com/google/go-cmp v0.5.6
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/internal/diff
@@ -224,9 +230,6 @@ github.com/hashicorp/go-multierror
 github.com/hashicorp/go-safetemp
 # github.com/hashicorp/go-version v1.1.0
 github.com/hashicorp/go-version
-# github.com/hashicorp/golang-lru v0.5.4
-github.com/hashicorp/golang-lru
-github.com/hashicorp/golang-lru/simplelru
 # github.com/hashicorp/hcl v1.0.0
 github.com/hashicorp/hcl
 github.com/hashicorp/hcl/hcl/ast
@@ -248,7 +251,7 @@ github.com/jgautheron/goconst
 github.com/jingyugao/rowserrcheck/passes/rowserr
 # github.com/jirfag/go-printf-func-name v0.0.0-20200119135958-7558a9eaa5af
 github.com/jirfag/go-printf-func-name/pkg/analyzer
-# github.com/json-iterator/go v1.1.11
+# github.com/json-iterator/go v1.1.12
 github.com/json-iterator/go
 # github.com/julz/importas v0.0.0-20210419104244-841f0c0fe66d
 github.com/julz/importas
@@ -302,7 +305,7 @@ github.com/mitchellh/go-testing-interface
 github.com/mitchellh/mapstructure
 # github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
 github.com/modern-go/concurrent
-# github.com/modern-go/reflect2 v1.0.1
+# github.com/modern-go/reflect2 v1.0.2
 github.com/modern-go/reflect2
 # github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00
 github.com/monochromegane/go-gitignore
@@ -514,7 +517,7 @@ golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/modfile
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.0.0-20210428140749-89ef3d95e781
+# golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 golang.org/x/net/html
@@ -530,15 +533,15 @@ golang.org/x/oauth2/google
 golang.org/x/oauth2/internal
 golang.org/x/oauth2/jws
 golang.org/x/oauth2/jwt
-# golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40
+# golang.org/x/sys v0.0.0-20220209214540-3681064d5158
 golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d
+# golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 golang.org/x/term
-# golang.org/x/text v0.3.6
+# golang.org/x/text v0.3.7
 golang.org/x/text/encoding
 golang.org/x/text/encoding/charmap
 golang.org/x/text/encoding/htmlindex
@@ -562,7 +565,7 @@ golang.org/x/text/unicode/norm
 golang.org/x/text/width
 # golang.org/x/time v0.0.0-20210611083556-38a9dc6acbc6
 golang.org/x/time/rate
-# golang.org/x/tools v0.1.3
+# golang.org/x/tools v0.1.5
 golang.org/x/tools/go/analysis
 golang.org/x/tools/go/analysis/passes/asmdecl
 golang.org/x/tools/go/analysis/passes/assign
@@ -649,7 +652,7 @@ google.golang.org/appengine/internal/modules
 google.golang.org/appengine/internal/remote_api
 google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/urlfetch
-# google.golang.org/protobuf v1.26.0
+# google.golang.org/protobuf v1.27.1
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
 google.golang.org/protobuf/internal/descfmt
@@ -713,7 +716,7 @@ honnef.co/go/tools/staticcheck
 honnef.co/go/tools/stylecheck
 honnef.co/go/tools/unused
 honnef.co/go/tools/unused/typemap
-# k8s.io/api v0.21.2
+# k8s.io/api v0.24.2
 ## explicit
 k8s.io/api/admission/v1
 k8s.io/api/admission/v1beta1
@@ -768,7 +771,7 @@ k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1
-# k8s.io/apimachinery v0.21.2
+# k8s.io/apimachinery v0.24.2
 ## explicit
 k8s.io/apimachinery/pkg/api/equality
 k8s.io/apimachinery/pkg/api/errors
@@ -946,19 +949,29 @@ k8s.io/client-go/util/workqueue
 # k8s.io/component-base v0.21.2
 k8s.io/component-base/config
 k8s.io/component-base/config/v1alpha1
-# k8s.io/klog/v2 v2.8.0
+# k8s.io/klog/v2 v2.60.1
 k8s.io/klog/v2
-# k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e
+k8s.io/klog/v2/internal/buffer
+k8s.io/klog/v2/internal/clock
+k8s.io/klog/v2/internal/serialize
+k8s.io/klog/v2/internal/severity
+# k8s.io/kube-openapi v0.0.0-20220328201542-3ee0da9b0b42
+k8s.io/kube-openapi/pkg/schemaconv
 k8s.io/kube-openapi/pkg/util/proto
 k8s.io/kube-openapi/pkg/validation/errors
 k8s.io/kube-openapi/pkg/validation/spec
 k8s.io/kube-openapi/pkg/validation/strfmt
 k8s.io/kube-openapi/pkg/validation/strfmt/bson
 k8s.io/kube-openapi/pkg/validation/validate
-# k8s.io/utils v0.0.0-20210527160623-6fdb442a123b
+# k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
 k8s.io/utils/buffer
+k8s.io/utils/clock
+k8s.io/utils/clock/testing
 k8s.io/utils/integer
+k8s.io/utils/internal/third_party/forked/golang/net
+k8s.io/utils/net
 k8s.io/utils/pointer
+k8s.io/utils/strings/slices
 k8s.io/utils/trace
 # mvdan.cc/gofumpt v0.1.1
 mvdan.cc/gofumpt/format
@@ -1033,6 +1046,9 @@ sigs.k8s.io/controller-tools/pkg/schemapatcher
 sigs.k8s.io/controller-tools/pkg/schemapatcher/internal/yaml
 sigs.k8s.io/controller-tools/pkg/version
 sigs.k8s.io/controller-tools/pkg/webhook
+# sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2
+sigs.k8s.io/json
+sigs.k8s.io/json/internal/golang/encoding/json
 # sigs.k8s.io/kustomize/api v0.8.0
 sigs.k8s.io/kustomize/api/builtins
 sigs.k8s.io/kustomize/api/filesys
@@ -1142,7 +1158,7 @@ sigs.k8s.io/kustomize/kyaml/yaml/merge2
 sigs.k8s.io/kustomize/kyaml/yaml/merge3
 sigs.k8s.io/kustomize/kyaml/yaml/schema
 sigs.k8s.io/kustomize/kyaml/yaml/walk
-# sigs.k8s.io/structured-merge-diff/v4 v4.1.0
+# sigs.k8s.io/structured-merge-diff/v4 v4.2.1
 sigs.k8s.io/structured-merge-diff/v4/fieldpath
 sigs.k8s.io/structured-merge-diff/v4/schema
 sigs.k8s.io/structured-merge-diff/v4/typed
