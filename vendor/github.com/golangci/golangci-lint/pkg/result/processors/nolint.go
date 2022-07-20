@@ -17,6 +17,7 @@ import (
 )
 
 var nolintDebugf = logutils.Debug("nolint")
+var nolintRe = regexp.MustCompile(`^nolint( |:|$)`)
 
 type ignoredRange struct {
 	linters                []string
@@ -32,7 +33,7 @@ func (i *ignoredRange) doesMatch(issue *result.Issue) bool {
 	}
 
 	// only allow selective nolinting of nolintlint
-	nolintFoundForLinter := len(i.linters) == 0 && issue.FromLinter != golinters.NolintlintName
+	nolintFoundForLinter := len(i.linters) == 0 && issue.FromLinter != golinters.NoLintLintName
 
 	for _, linterName := range i.linters {
 		if linterName == issue.FromLinter {
@@ -46,8 +47,8 @@ func (i *ignoredRange) doesMatch(issue *result.Issue) bool {
 	}
 
 	// handle possible unused nolint directives
-	// nolintlint generates potential issues for every nolint directive and they are filtered out here
-	if issue.FromLinter == golinters.NolintlintName && issue.ExpectNoLint {
+	// nolintlint generates potential issues for every nolint directive, and they are filtered out here
+	if issue.FromLinter == golinters.NoLintLintName && issue.ExpectNoLint {
 		if issue.ExpectedNoLintLinter != "" {
 			return i.matchedIssueFromLinter[issue.ExpectedNoLintLinter]
 		}
@@ -147,7 +148,7 @@ func (p *Nolint) buildIgnoredRangesForFile(f *ast.File, fset *token.FileSet, fil
 
 func (p *Nolint) shouldPassIssue(i *result.Issue) (bool, error) {
 	nolintDebugf("got issue: %v", *i)
-	if i.FromLinter == golinters.NolintlintName && i.ExpectNoLint && i.ExpectedNoLintLinter != "" {
+	if i.FromLinter == golinters.NoLintLintName && i.ExpectNoLint && i.ExpectedNoLintLinter != "" {
 		// don't expect disabled linters to cover their nolint statements
 		nolintDebugf("enabled linters: %v", p.enabledLinters)
 		if p.enabledLinters[i.ExpectedNoLintLinter] == nil {
@@ -234,7 +235,7 @@ func (p *Nolint) extractFileCommentsInlineRanges(fset *token.FileSet, comments .
 
 func (p *Nolint) extractInlineRangeFromComment(text string, g ast.Node, fset *token.FileSet) *ignoredRange {
 	text = strings.TrimLeft(text, "/ ")
-	if ok, _ := regexp.MatchString(`^nolint( |:|$)`, text); !ok {
+	if !nolintRe.MatchString(text) {
 		return nil
 	}
 
@@ -284,7 +285,7 @@ func (p Nolint) Finish() {
 		return
 	}
 
-	unknownLinters := []string{}
+	unknownLinters := make([]string, 0, len(p.unknownLintersSet))
 	for name := range p.unknownLintersSet {
 		unknownLinters = append(unknownLinters, name)
 	}
@@ -301,7 +302,7 @@ func (issues sortWithNolintlintLast) Len() int {
 }
 
 func (issues sortWithNolintlintLast) Less(i, j int) bool {
-	return issues[i].FromLinter != golinters.NolintlintName && issues[j].FromLinter == golinters.NolintlintName
+	return issues[i].FromLinter != golinters.NoLintLintName && issues[j].FromLinter == golinters.NoLintLintName
 }
 
 func (issues sortWithNolintlintLast) Swap(i, j int) {
