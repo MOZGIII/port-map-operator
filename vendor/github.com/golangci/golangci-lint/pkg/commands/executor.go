@@ -38,7 +38,7 @@ type Executor struct {
 	exitCode              int
 	version, commit, date string
 
-	cfg               *config.Config
+	cfg               *config.Config // cfg is the unmarshaled data from the golangci config file.
 	log               logutils.Log
 	reportData        report.Data
 	DBManager         *lintersdb.Manager
@@ -55,6 +55,7 @@ type Executor struct {
 	flock     *flock.Flock
 }
 
+// NewExecutor creates and initializes a new command executor.
 func NewExecutor(version, commit, date string) *Executor {
 	startedAt := time.Now()
 	e := &Executor{
@@ -97,7 +98,6 @@ func NewExecutor(version, commit, date string) *Executor {
 	e.initHelp()
 	e.initLinters()
 	e.initConfig()
-	e.initCompletion()
 	e.initVersion()
 	e.initCache()
 
@@ -110,13 +110,12 @@ func NewExecutor(version, commit, date string) *Executor {
 		e.log.Fatalf("Can't read config: %s", err)
 	}
 
+	if (commandLineCfg == nil || commandLineCfg.Run.Go == "") && e.cfg != nil && e.cfg.Run.Go == "" {
+		e.cfg.Run.Go = config.DetectGoVersion()
+	}
+
 	// recreate after getting config
 	e.DBManager = lintersdb.NewManager(e.cfg, e.log).WithCustomLinters()
-
-	e.cfg.LintersSettings.Gocritic.InferEnabledChecks(e.log)
-	if err = e.cfg.LintersSettings.Gocritic.Validate(e.log); err != nil {
-		e.log.Fatalf("Invalid gocritic settings: %s", err)
-	}
 
 	// Slice options must be explicitly set for proper merging of config and command-line options.
 	fixSlicesFlags(e.runCmd.Flags())
