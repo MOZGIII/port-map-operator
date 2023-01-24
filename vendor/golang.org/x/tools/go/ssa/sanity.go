@@ -30,7 +30,6 @@ type sanity struct {
 //
 // Sanity-checking is intended to facilitate the debugging of code
 // transformation passes.
-//
 func sanityCheck(fn *Function, reporter io.Writer) bool {
 	if reporter == nil {
 		reporter = os.Stderr
@@ -40,7 +39,6 @@ func sanityCheck(fn *Function, reporter io.Writer) bool {
 
 // mustSanityCheck is like sanityCheck but panics instead of returning
 // a negative result.
-//
 func mustSanityCheck(fn *Function, reporter io.Writer) {
 	if !sanityCheck(fn, reporter) {
 		fn.WriteTo(os.Stderr)
@@ -132,10 +130,11 @@ func (s *sanity) checkInstr(idx int, instr Instruction) {
 	case *Call:
 	case *ChangeInterface:
 	case *ChangeType:
+	case *SliceToArrayPointer:
 	case *Convert:
-		if _, ok := instr.X.Type().Underlying().(*types.Basic); !ok {
-			if _, ok := instr.Type().Underlying().(*types.Basic); !ok {
-				s.errorf("convert %s -> %s: at least one type must be basic", instr.X.Type(), instr.Type())
+		if from := instr.X.Type(); !isBasicConvTypes(typeSetOf(from)) {
+			if to := instr.Type(); !isBasicConvTypes(typeSetOf(to)) {
+				s.errorf("convert %s -> %s: at least one type must be basic (or all basic, []byte, or []rune)", from, to)
 			}
 		}
 
@@ -403,13 +402,15 @@ func (s *sanity) checkFunction(fn *Function) bool {
 	// - check params match signature
 	// - check transient fields are nil
 	// - warn if any fn.Locals do not appear among block instructions.
+
+	// TODO(taking): Sanity check origin, typeparams, and typeargs.
 	s.fn = fn
 	if fn.Prog == nil {
 		s.errorf("nil Prog")
 	}
 
-	_ = fn.String()            // must not crash
-	_ = fn.RelString(fn.pkg()) // must not crash
+	_ = fn.String()               // must not crash
+	_ = fn.RelString(fn.relPkg()) // must not crash
 
 	// All functions have a package, except delegates (which are
 	// shared across packages, or duplicated as weak symbols in a
@@ -418,14 +419,23 @@ func (s *sanity) checkFunction(fn *Function) bool {
 		if strings.HasPrefix(fn.Synthetic, "wrapper ") ||
 			strings.HasPrefix(fn.Synthetic, "bound ") ||
 			strings.HasPrefix(fn.Synthetic, "thunk ") ||
-			strings.HasSuffix(fn.name, "Error") {
+			strings.HasSuffix(fn.name, "Error") ||
+			strings.HasPrefix(fn.Synthetic, "instance ") ||
+			strings.HasPrefix(fn.Synthetic, "instantiation ") ||
+			(fn.parent != nil && len(fn.typeargs) > 0) /* anon fun in instance */ {
 			// ok
 		} else {
 			s.errorf("nil Pkg")
 		}
 	}
 	if src, syn := fn.Synthetic == "", fn.Syntax() != nil; src != syn {
-		s.errorf("got fromSource=%t, hasSyntax=%t; want same values", src, syn)
+		if len(fn.typeargs) > 0 && fn.Prog.mode&InstantiateGenerics != 0 {
+			// ok (instantiation with InstantiateGenerics on)
+		} else if fn.topLevelOrigin != nil && len(fn.typeargs) > 0 {
+			// ok (we always have the syntax set for instantiation)
+		} else {
+			s.errorf("got fromSource=%t, hasSyntax=%t; want same values", src, syn)
+		}
 	}
 	for i, l := range fn.Locals {
 		if l.Parent() != fn {
@@ -486,6 +496,9 @@ func (s *sanity) checkFunction(fn *Function) bool {
 	for i, anon := range fn.AnonFuncs {
 		if anon.Parent() != fn {
 			s.errorf("AnonFuncs[%d]=%s but %s.Parent()=%s", i, anon, anon, anon.Parent())
+		}
+		if i != int(anon.anonIdx) {
+			s.errorf("AnonFuncs[%d]=%s but %s.anonIdx=%d", i, anon, anon, anon.anonIdx)
 		}
 	}
 	s.fn = nil
